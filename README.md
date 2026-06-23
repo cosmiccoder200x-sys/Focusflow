@@ -129,4 +129,4 @@ All data currently stays **100% local** via Chrome Storage API.
 
 ## 📄 License
 
-MIT — Built for IITM & engineering students.
+MIT — Built for engineering students & professionals.
