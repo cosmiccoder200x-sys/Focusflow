@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FocusFlow</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="brand">
+    <div class="brand-icon-wrap">⚡</div>
+    <div>
+      <div class="brand-name">FocusFlow</div>
+      <div class="brand-version">PRO v4.0 &nbsp;<span class="godmode-badge">GODMODE</span></div>
+    </div>
+  </div>
+  <div id="totalUsage" class="total-usage">⏱ 0s today</div>
+</header>
+
+<!-- NAV ROW 1 -->
+<nav class="nav">
+  <button class="tab-btn active" data-tab="track">Track</button>
+  <button class="tab-btn" data-tab="block">Block</button>
+  <button class="tab-btn" data-tab="speed">Speed</button>
+  <button class="tab-btn" data-tab="pomo">Pomo</button>
+  <button class="tab-btn" data-tab="notes">Notes</button>
+  <button class="tab-btn" data-tab="tasks">Tasks</button>
+</nav>
+<!-- NAV ROW 2 -->
+<nav class="nav nav2">
+  <button class="tab-btn" data-tab="stats">Stats</button>
+  <button class="tab-btn" data-tab="badges">Badges</button>
+  <button class="tab-btn" data-tab="score">Score</button>
+  <button class="tab-btn" data-tab="code">Coding</button>
+  <button class="tab-btn" data-tab="report">Report</button>
+  <button class="tab-btn" data-tab="settings">Settings</button>
+  <button class="tab-btn" data-tab="dark">Dark</button>
+</nav>
+
+<!-- ===== TRACK TAB ===== -->
+<section class="tab-content active" id="tab-track">
+  <div class="live-bar">
+    <span class="live-dot"></span>
+    <span id="liveDomain">—</span>
+    <span id="liveTime" class="live-time">0s</span>
+  </div>
+  <div class="date-row">
+    <label class="small-label">Date:</label>
+    <select id="datePicker" class="picker"></select>
+  </div>
+  <div class="chart-section-label">Today's Breakdown</div>
+  <canvas id="chart" width="362" height="130"></canvas>
+  <div class="chart-legend">
+    <span><span class="legend-dot study"></span>Study</span>
+    <span><span class="legend-dot waste"></span>Waste</span>
+    <span><span class="legend-dot total"></span>Total</span>
+  </div>
+  <div class="chart-section-label">7-Day History</div>
+  <canvas id="dayGraph" width="362" height="100"></canvas>
+  <div id="siteList" class="site-list"></div>
+</section>
+
+<!-- ===== BLOCK TAB ===== -->
+<section class="tab-content" id="tab-block">
+  <p class="section-title">Blocked Sites</p>
+  <div class="block-input-row">
+    <input id="blockInput" class="text-input" placeholder="instagram.com" />
+    <button id="addBlockBtn" class="btn btn-danger">+ Add</button>
+  </div>
+  <ul id="blockList" class="block-list"></ul>
+</section>
+
+<!-- ===== SPEED TAB ===== -->
+<section class="tab-content" id="tab-speed">
+  <p class="section-title">Video Speed Booster</p>
+  <div class="speed-display">
+    <span id="speedVal">1.0</span><span class="speed-unit">x</span>
+  </div>
+  <input type="range" id="speedSlider" min="0.25" max="15" step="0.25" value="1" class="slider" />
+  <div class="preset-row">
+    <button class="preset-btn" data-speed="0.5">0.5x</button>
+    <button class="preset-btn active" data-speed="1">1x</button>
+    <button class="preset-btn" data-speed="1.5">1.5x</button>
+    <button class="preset-btn" data-speed="2">2x</button>
+    <button class="preset-btn" data-speed="5">5x</button>
+    <button class="preset-btn" data-speed="10">10x</button>
+    <button class="preset-btn" data-speed="15">15x</button>
+  </div>
+  <button id="applySpeed" class="btn btn-primary" style="margin-top:12px;width:100%">Apply to Page</button>
+</section>
+
+<!-- ===== POMO TAB ===== -->
+<section class="tab-content" id="tab-pomo">
+  <div class="pomo-settings">
+    <div class="pomo-dur-group">
+      <div class="pomo-dur-label">Study (min)</div>
+      <input type="number" id="studyMinInput" class="pomo-dur-input" value="25" min="1" max="120" />
+    </div>
+    <div class="pomo-dur-group">
+      <div class="pomo-dur-label">Break (min)</div>
+      <input type="number" id="breakMinInput" class="pomo-dur-input" value="5" min="1" max="60" />
+    </div>
+    <button id="applyDurBtn" class="btn btn-ghost" style="padding:6px 12px;font-size:11px;white-space:nowrap">Set</button>
+  </div>
+  <div class="pomo-wrap">
+    <svg class="pomo-ring" viewBox="0 0 120 120">
+      <circle class="ring-bg" cx="60" cy="60" r="54"/>
+      <circle id="ringProgress" class="ring-fg" cx="60" cy="60" r="54"
+        stroke-dasharray="339.3" stroke-dashoffset="0"/>
+    </svg>
+    <div class="pomo-center">
+      <div id="pomoLabel" class="pomo-label">STUDY</div>
+      <div id="pomoTime"  class="pomo-time">25:00</div>
+    </div>
+  </div>
+  <div class="pomo-controls">
+    <button id="pomoStart" class="btn btn-primary">▶ Start</button>
+    <button id="pomoReset" class="btn btn-ghost">↺ Reset</button>
+  </div>
+  <div id="pomoStatus" class="pomo-status"></div>
+  <p class="pomo-history-title">Session History</p>
+  <div id="pomoHistory" class="pomo-history">
+    <div class="empty-state">No sessions yet today.</div>
+  </div>
+</section>
+
+<!-- ===== NOTES TAB ===== -->
+<section class="tab-content" id="tab-notes">
+  <div class="notes-header">
+    <p class="section-title">Quick Notes</p>
+    <span id="notesSaved" class="saved-badge">Saved ✓</span>
+  </div>
+  <textarea id="notesArea" class="notes-area" placeholder="Type here… auto-saves instantly."></textarea>
+</section>
+
+<!-- ===== TASKS TAB ===== -->
+<section class="tab-content" id="tab-tasks">
+  <div class="tasks-header">
+    <p class="section-title">Tasks</p>
+    <div id="tasksBlockStatus" class="tasks-block-status tasks-blocked">🔴 Sites Blocked</div>
+  </div>
+  <div class="task-hint" id="taskHint">Complete all tasks to unblock sites.</div>
+  <div class="block-input-row">
+    <input id="taskInput" class="text-input" placeholder="Add a task…" />
+    <button id="addTaskBtn" class="btn btn-primary">+ Add</button>
+  </div>
+  <ul id="taskList" class="task-list"></ul>
+  <div id="taskEmpty" class="empty-state" style="display:none">No tasks. Sites are unblocked! 🎉</div>
+</section>
+
+<!-- ===== STATS TAB (Heatmap) ===== -->
+<section class="tab-content" id="tab-stats">
+  <p class="section-title">Productivity Heatmap — Last 365 Days</p>
+  <div class="streak-row">
+    <div class="streak-card">
+      <div id="currentStreak" class="streak-val">0</div>
+      <div class="streak-label">Current Streak</div>
+    </div>
+    <div class="streak-card">
+      <div id="longestStreak" class="streak-val gold">0</div>
+      <div class="streak-label">Longest Streak</div>
+    </div>
+    <div class="streak-card">
+      <div id="totalProductiveDays" class="streak-val green">0</div>
+      <div class="streak-label">Productive Days</div>
+    </div>
+  </div>
+  <div id="heatmapWrap" class="heatmap-wrap">
+    <canvas id="heatmapCanvas"></canvas>
+    <div id="heatmapTooltip" class="heatmap-tooltip"></div>
+  </div>
+  <div class="heatmap-legend-row">
+    <span class="heatmap-legend-label">Less</span>
+    <div class="heatmap-legend-boxes">
+      <div class="hml-box" style="background:#1a1a22"></div>
+      <div class="hml-box" style="background:#1c3a2a"></div>
+      <div class="hml-box" style="background:#2a6644"></div>
+      <div class="hml-box" style="background:#3aa866"></div>
+      <div class="hml-box" style="background:#4caf82"></div>
+    </div>
+    <span class="heatmap-legend-label">More</span>
+  </div>
+</section>
+
+<!-- ===== BADGES TAB ===== -->
+<section class="tab-content" id="tab-badges">
+  <p class="section-title">Achievements</p>
+  <div id="badgeGrid" class="badge-grid"></div>
+</section>
+
+<!-- ===== SCORE TAB ===== -->
+<section class="tab-content" id="tab-score">
+  <p class="section-title">Daily Productivity Score</p>
+  <div class="score-wrap">
+    <div class="score-ring-wrap">
+      <svg class="score-ring" viewBox="0 0 120 120">
+        <circle class="score-ring-bg" cx="60" cy="60" r="50"/>
+        <circle id="scoreRingFg" class="score-ring-fg" cx="60" cy="60" r="50"
+          stroke-dasharray="314.2" stroke-dashoffset="314.2"/>
+      </svg>
+      <div class="score-center">
+        <div id="scoreValue" class="score-val">—</div>
+        <div class="score-label">/ 100</div>
+      </div>
+    </div>
+    <div class="score-breakdown">
+      <div class="score-factor">
+        <span class="sf-label">Focus Time</span>
+        <div class="sf-bar-bg"><div id="sf-focus" class="sf-bar" style="width:0%"></div></div>
+        <span id="sf-focus-val" class="sf-val">0</span>
+      </div>
+      <div class="score-factor">
+        <span class="sf-label">Pomodoros</span>
+        <div class="sf-bar-bg"><div id="sf-pomo" class="sf-bar pomo" style="width:0%"></div></div>
+        <span id="sf-pomo-val" class="sf-val">0</span>
+      </div>
+      <div class="score-factor">
+        <span class="sf-label">Tasks Done</span>
+        <div class="sf-bar-bg"><div id="sf-tasks" class="sf-bar tasks" style="width:0%"></div></div>
+        <span id="sf-tasks-val" class="sf-val">0</span>
+      </div>
+      <div class="score-factor">
+        <span class="sf-label">Focus Ratio</span>
+        <div class="sf-bar-bg"><div id="sf-block" class="sf-bar block" style="width:0%"></div></div>
+        <span id="sf-block-val" class="sf-val">0%</span>
+      </div>
+    </div>
+  </div>
+  <div class="chart-section-label" style="margin-top:8px">Weekly Score Trend</div>
+  <canvas id="scoreTrendCanvas" width="362" height="90"></canvas>
+
+  <!-- Category Breakdown -->
+  <div class="chart-section-label" style="margin-top:6px">Time by Category</div>
+  <div class="cat-wrap">
+    <canvas id="catPieCanvas" width="110" height="110"></canvas>
+    <div id="catLegend" class="cat-legend"></div>
+  </div>
+</section>
+
+<!-- ===== CODING TAB ===== -->
+<section class="tab-content" id="tab-code">
+  <p class="section-title">Coding Dashboard</p>
+  <div class="code-stats-row">
+    <div class="code-stat-card">
+      <div id="codingToday" class="code-stat-val">0m</div>
+      <div class="code-stat-label">Today</div>
+    </div>
+    <div class="code-stat-card">
+      <div id="codingWeek" class="code-stat-val">0m</div>
+      <div class="code-stat-label">This Week</div>
+    </div>
+    <div class="code-stat-card">
+      <div id="codingStreak" class="code-stat-val">0</div>
+      <div class="code-stat-label">Day Streak</div>
+    </div>
+  </div>
+  <div class="chart-section-label">Platform Breakdown</div>
+  <div id="codingPlatforms" class="coding-platforms"></div>
+  <div class="chart-section-label" style="margin-top:6px">7-Day Coding Hours</div>
+  <canvas id="codingGraphCanvas" width="362" height="90"></canvas>
+</section>
+
+<!-- ===== REPORT TAB ===== -->
+<section class="tab-content" id="tab-report">
+  <p class="section-title">Weekly Report</p>
+  <div id="reportContent" class="report-content"></div>
+  <div class="report-export-row">
+    <button id="exportJsonBtn" class="btn btn-ghost" style="flex:1">⬇ JSON</button>
+    <button id="exportCsvBtn" class="btn btn-ghost" style="flex:1">⬇ CSV</button>
+    <button id="exportDataBtn" class="btn btn-primary" style="flex:1">⬇ All Data</button>
+  </div>
+</section>
+
+<!-- ===== SETTINGS TAB ===== -->
+<section class="tab-content" id="tab-settings">
+  <p class="section-title">Settings</p>
+
+  <div class="settings-group">
+    <div class="settings-label">Theme</div>
+    <div class="theme-toggle-row">
+      <button class="theme-btn active" id="themeGold" data-theme="gold">Gold</button>
+      <button class="theme-btn" id="themeBlue" data-theme="blue">Blue</button>
+      <button class="theme-btn" id="themeGreen" data-theme="green">Green</button>
+      <button class="theme-btn" id="themePink" data-theme="pink">Pink</button>
+    </div>
+  </div>
+
+  <div class="settings-group">
+    <div class="settings-label">Data Management</div>
+    <button id="backupBtn" class="btn btn-ghost settings-btn">📦 Backup Data (JSON)</button>
+    <label class="btn btn-ghost settings-btn" style="cursor:pointer;text-align:center">
+      📥 Restore Data
+      <input type="file" id="restoreInput" accept=".json" style="display:none" />
+    </label>
+    <button id="exportAllBtn" class="btn btn-ghost settings-btn">⬇ Export All Data (JSON)</button>
+    <button id="exportCsvAllBtn" class="btn btn-ghost settings-btn">⬇ Export All Data (CSV)</button>
+  </div>
+
+  <div class="settings-group">
+    <div class="settings-label">Reset</div>
+    <button id="resetStatsBtn" class="btn btn-danger settings-btn">🗑 Reset Statistics</button>
+    <button id="resetAllBtn" class="btn btn-danger settings-btn">⚠ Reset ALL Data</button>
+  </div>
+
+  <div class="settings-group">
+    <div class="settings-label">HabitOS Sync (Coming Soon)</div>
+    <div class="habitos-info">
+      Architecture ready. Cloud sync with HabitOS will be enabled in a future update.
+      Your data is stored in structured format compatible with HabitOS API.
+    </div>
+  </div>
+
+  <div class="settings-version">FocusFlow v4.0 — IITM Dev Build</div>
+</section>
+
+<!-- ===== DARK MODE TAB ===== -->
+<section class="tab-content" id="tab-dark">
+  <p class="section-title">Dark Mode Enabler</p>
+
+  <!-- Global toggle -->
+  <div class="dark-global-card">
+    <div class="dark-global-info">
+      <div class="dark-global-title">🌙 Global Dark Mode</div>
+      <div class="dark-global-sub">Apply dark mode to ALL websites</div>
+    </div>
+    <label class="toggle-switch">
+      <input type="checkbox" id="darkGlobalToggle" />
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+
+  <!-- Current site toggle -->
+  <div class="dark-site-card">
+    <div class="dark-site-info">
+      <div class="dark-site-title">Current Site</div>
+      <div id="darkCurrentSite" class="dark-site-domain">—</div>
+    </div>
+    <label class="toggle-switch">
+      <input type="checkbox" id="darkSiteToggle" />
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+
+  <!-- Dark mode style selector -->
+  <div class="dark-style-row">
+    <div class="small-label">Style:</div>
+    <div class="dark-style-btns">
+      <button class="dark-style-btn active" data-style="invert">Invert</button>
+      <button class="dark-style-btn" data-style="dim">Dim</button>
+      <button class="dark-style-btn" data-style="grayscale">Grayscale</button>
+    </div>
+  </div>
+
+  <!-- Intensity slider -->
+  <div class="dark-intensity-row">
+    <div class="small-label">Intensity:</div>
+    <input type="range" id="darkIntensity" min="50" max="100" value="90" class="slider" style="flex:1" />
+    <span id="darkIntensityVal" class="live-time">90%</span>
+  </div>
+
+  <!-- Per-site list -->
+  <div class="chart-section-label" style="margin-top:2px">Per-Site Overrides</div>
+  <div id="darkSiteList" class="dark-site-list"></div>
+</section>
+
+<script src="popup.js"></script>
+</body>
+</html>
