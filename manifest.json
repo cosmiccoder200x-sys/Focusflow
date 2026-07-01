@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "FocusFlow — Productivity Suite",
+  "name": "FocusFlow - Productivity Suite",
   "version": "4.0",
-  "description": "Chrome extension — track sites, block distractions, Pomodoro timer, dark mode & coding dashboard.",
+  "description": "Chrome extension - track sites, block distractions, Pomodoro timer, dark mode & coding dashboard.",
   "icons": {
     "128": "icon.png"
   },
