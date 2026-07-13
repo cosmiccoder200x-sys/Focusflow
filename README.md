@@ -1,6 +1,6 @@
 #  FocusFlow — Productivity Suite
 
-> Chrome extension — track sites, block distractions, Pomodoro timer, dark mode & coding dashboard.
+> Chrome extension — track sites, block distractions, Pomodoro timer, dark mode & coding dashboard
 
 ![Version](https://img.shields.io/badge/version-4.0-gold)
 ![Manifest](https://img.shields.io/badge/manifest-v3-blue)
