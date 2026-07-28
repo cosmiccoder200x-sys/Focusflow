@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Focus Mode — FocusFlow</title>
+<link rel="stylesheet" href="blocked.css" />
+</head>
+<body>
+
+  <div class="grid-bg" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">FF</span>
+      <span class="brand-name">FocusFlow</span>
+    </div>
+    <div class="reclaim">
+      <span class="reclaim-dot"></span>
+      <span class="reclaim-label">Time reclaimed this session</span>
+      <span class="reclaim-time" id="reclaimTime">00:00</span>
+    </div>
+  </header>
+
+  <main class="stage">
+
+    <section class="hero">
+      <p class="eyebrow">FOCUS MODE ACTIVE</p>
+      <h1 class="headline">You chose focus.<br>That was the right call.</h1>
+      <p class="sub">
+        <span id="blockedSite">This site</span> is off-limits while you're in a focus session.
+        Take a breath, watch this, and get back to it.
+      </p>
+    </section>
+
+    <section class="video-card">
+      <div class="video-frame">
+        <iframe
+          id="motivateFrame"
+          src="https://www.youtube.com/embed/5f7E4DQG6kk?rel=0&modestbranding=1"
+          title="Focus motivation"
+          frameborder="0"
+          allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <a class="video-fallback" href="https://www.youtube.com/shorts/5f7E4DQG6kk" target="_blank" rel="noopener">
+        Open on YouTube instead ↗
+      </a>
+    </section>
+
+    <section class="actions">
+      <button class="btn btn-primary" id="closeTabBtn">Close this tab &amp; get back to work</button>
+      <button class="btn btn-ghost" id="newTabBtn">Open a new tab instead</button>
+    </section>
+
+    <p class="footnote">Blocked by FocusFlow · Edit your block list anytime from the extension popup</p>
+
+  </main>
+
+<script src="blocked.js"></script>
+</body>
+</html>
