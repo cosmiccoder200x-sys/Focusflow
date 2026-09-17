@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "LockIn - Productivity Suite",
+  "version": "1.0.0",
+  "description": "Stay locked in. Track sites, block distractions, Pomodoro timer, Deep Work sessions, coding dashboard, and more.",
+  "icons": {
+    "16": "FocusFlow_v4_1_1/icon16.png",
+    "32": "FocusFlow_v4_1_1/icon32.png",
+    "48": "FocusFlow_v4_1_1/icon48.png",
+    "128": "FocusFlow_v4_1_1/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "FocusFlow_v4_1_1/icon16.png",
+      "32": "FocusFlow_v4_1_1/icon32.png",
+      "48": "FocusFlow_v4_1_1/icon48.png",
+      "128": "FocusFlow_v4_1_1/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "tabs",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "web_accessible_resources": [
+    {
+      "resources": ["blocked.html", "blocked.css", "blocked.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
