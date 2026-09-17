@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LockIn</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+
+<!-- ===== HOME SECTION ===== -->
+<section class="view active" id="view-home">
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="brand-mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <span class="brand-name">LockIn</span>
+    </div>
+    <div class="header-right">
+      <span class="header-date" id="homeDate"></span>
+      <button class="icon-btn" id="homeSettingsBtn" aria-label="Settings" title="Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="home-scroll">
+    <!-- Hero Focus Area -->
+    <div class="hero-focus" id="heroFocus">
+      <div class="hero-inactive" id="heroInactive">
+        <div class="hero-prompt">Ready to focus?</div>
+        <div class="hero-current-task" id="heroCurrentTaskInactive"></div>
+        <button class="btn btn-primary btn-large" id="heroStartBtn">Start Deep Work</button>
+      </div>
+      <div class="hero-active" id="heroActive" style="display:none">
+        <div class="hero-status-pill" id="heroStatusPill">DEEP WORK</div>
+        <div class="hero-task-label" id="heroTaskLabel">—</div>
+        <div class="hero-timer" id="heroTimer">00:00</div>
+        <div class="hero-actions">
+          <button class="btn btn-secondary" id="heroPauseBtn">Pause</button>
+          <button class="btn btn-ghost btn-sm" id="heroStopBtn">Stop</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today Summary -->
+    <div class="home-summary-row">
+      <div class="summary-stat">
+        <div class="summary-val" id="sumFocusTime">0m</div>
+        <div class="summary-label">Focus</div>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-stat">
+        <div class="summary-val" id="sumTasksDone">0</div>
+        <div class="summary-label">Tasks done</div>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-stat">
+        <div class="summary-val" id="sumScore">—</div>
+        <div class="summary-label">Score</div>
+      </div>
+    </div>
+
+    <!-- Today's Tasks -->
+    <div class="home-section">
+      <div class="section-header">
+        <span class="section-title">Today's Tasks</span>
+        <button class="btn btn-ghost btn-xs" id="homeAddTaskBtn">+ Add</button>
+      </div>
+      <div class="home-task-input-wrap" id="homeTaskInputWrap" style="display:none">
+        <input id="homeTaskInput" class="text-input" placeholder="Task name…" />
+        <button class="btn btn-primary btn-xs" id="homeAddTaskConfirm">Add</button>
+      </div>
+      <ul class="home-task-list" id="homeTaskList"></ul>
+    </div>
+
+    <!-- Today's Progress -->
+    <div class="home-section">
+      <div class="section-header">
+        <span class="section-title">Progress</span>
+        <span class="section-muted" id="homeLiveStatus"></span>
+      </div>
+      <div class="progress-row">
+        <div class="progress-item">
+          <div class="progress-label">Study</div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill study" id="progStudy" style="width:0%"></div></div>
+          <div class="progress-time" id="progStudyTime">0m</div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-label">Other</div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill waste" id="progWaste" style="width:0%"></div></div>
+          <div class="progress-time" id="progWasteTime">0m</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOCUS SECTION ===== -->
+<section class="view" id="view-focus">
+  <header class="app-header app-header-simple">
+    <span class="view-title">Focus</span>
+  </header>
+
+  <div class="focus-scroll">
+    <!-- Deep Work -->
+    <div class="focus-card" id="deepWorkCard">
+      <div class="focus-card-header">
+        <span class="focus-card-title">Deep Work</span>
+        <div class="deepwork-badge" id="deepWorkBadge" style="display:none">ACTIVE</div>
+      </div>
+
+      <!-- Inactive state -->
+      <div id="dwInactive">
+        <div class="dw-field">
+          <label class="field-label" for="dwGoalInput">Session goal</label>
+          <input id="dwGoalInput" class="text-input" placeholder="e.g. Finish DSA problems" />
+        </div>
+        <div class="dw-field dw-duration-row">
+          <label class="field-label" for="dwDurInput">Duration (minutes)</label>
+          <input id="dwDurInput" type="number" class="text-input text-input-sm" value="60" min="1" max="480" />
+        </div>
+        <button class="btn btn-primary btn-full" id="dwStartBtn">Start Deep Work</button>
+      </div>
+
+      <!-- Active state -->
+      <div id="dwActive" style="display:none">
+        <div class="dw-task-display" id="dwTaskDisplay">—</div>
+        <div class="dw-timer" id="dwTimer">60:00</div>
+        <div class="dw-timer-label" id="dwTimerLabel">remaining</div>
+        <div class="dw-block-status" id="dwBlockStatus"></div>
+        <div class="dw-controls">
+          <button class="btn btn-secondary" id="dwPauseBtn">Pause</button>
+          <button class="btn btn-danger btn-sm" id="dwStopBtn">Stop Session</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pomodoro -->
+    <div class="focus-card">
+      <div class="focus-card-header">
+        <span class="focus-card-title">Pomodoro</span>
+        <div class="pomo-phase-badge" id="pomoPhaseBadge">STUDY</div>
+      </div>
+      <div class="pomo-settings-row">
+        <div class="pomo-dur-field">
+          <label class="field-label">Study (min)</label>
+          <input type="number" id="studyMinInput" class="text-input text-input-xs" value="25" min="1" max="120" />
+        </div>
+        <div class="pomo-dur-field">
+          <label class="field-label">Break (min)</label>
+          <input type="number" id="breakMinInput" class="text-input text-input-xs" value="5" min="1" max="60" />
+        </div>
+        <button id="applyDurBtn" class="btn btn-ghost btn-xs">Set</button>
+      </div>
+      <div class="pomo-layout">
+        <div class="pomo-ring-wrap">
+          <svg class="pomo-ring" viewBox="0 0 90 90">
+            <circle class="ring-bg" cx="45" cy="45" r="38"/>
+            <circle id="ringProgress" class="ring-fg" cx="45" cy="45" r="38"
+              stroke-dasharray="238.8" stroke-dashoffset="0"/>
+          </svg>
+          <div class="pomo-center-text">
+            <div id="pomoTime" class="pomo-time">25:00</div>
+          </div>
+        </div>
+        <div class="pomo-right">
+          <div class="pomo-controls">
+            <button id="pomoStart" class="btn btn-primary">Start</button>
+            <button id="pomoReset" class="btn btn-ghost">Reset</button>
+          </div>
+          <div id="pomoStatus" class="pomo-status-text"></div>
+        </div>
+      </div>
+      <div class="pomo-history-wrap">
+        <div class="field-label" style="margin-bottom:6px">Session History</div>
+        <div id="pomoHistory" class="pomo-history">
+          <div class="empty-state">No sessions yet today.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TOOLS SECTION ===== -->
+<section class="view" id="view-tools">
+  <header class="app-header app-header-simple">
+    <span class="view-title">Tools</span>
+  </header>
+
+  <div class="tools-scroll">
+    <!-- Website Blocker -->
+    <div class="tools-card">
+      <div class="tools-card-title">Website Blocker</div>
+      <div class="block-input-row">
+        <input id="blockInput" class="text-input" placeholder="instagram.com" />
+        <button id="addBlockBtn" class="btn btn-primary btn-sm">Add</button>
+      </div>
+      <ul id="blockList" class="block-list"></ul>
+    </div>
+
+    <!-- Video Speed -->
+    <div class="tools-card">
+      <div class="tools-card-title">Video Speed</div>
+      <div class="speed-grid" id="speedGrid">
+        <button class="speed-btn" data-speed="0.5">0.5x</button>
+        <button class="speed-btn active" data-speed="1">1x</button>
+        <button class="speed-btn" data-speed="1.25">1.25x</button>
+        <button class="speed-btn" data-speed="1.5">1.5x</button>
+        <button class="speed-btn" data-speed="2">2x</button>
+        <button class="speed-btn" data-speed="2.5">2.5x</button>
+        <button class="speed-btn" data-speed="3">3x</button>
+        <button class="speed-btn" data-speed="4">4x</button>
+      </div>
+      <div class="speed-apply-row">
+        <span class="speed-current-label">Current: <span id="speedCurrentVal" class="speed-current-val">1x</span></span>
+        <button id="applySpeed" class="btn btn-primary btn-sm">Apply to Page</button>
+      </div>
+    </div>
+
+    <!-- Quick Notes -->
+    <div class="tools-card">
+      <div class="tools-card-header-row">
+        <div class="tools-card-title">Quick Notes</div>
+        <span id="notesSaved" class="saved-indicator">Saved</span>
+      </div>
+      <textarea id="notesArea" class="notes-area" placeholder="Type here… auto-saves instantly."></textarea>
+    </div>
+
+    <!-- Dark Mode -->
+    <div class="tools-card">
+      <div class="tools-card-title">Dark Mode Enabler</div>
+      <div class="dark-toggle-row">
+        <div class="dark-toggle-info">
+          <div class="dark-toggle-label">Global Dark Mode</div>
+          <div class="dark-toggle-sub">Apply to all websites</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="darkGlobalToggle" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="dark-toggle-row">
+        <div class="dark-toggle-info">
+          <div class="dark-toggle-label">Current Site</div>
+          <div class="dark-toggle-sub" id="darkCurrentSite">—</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="darkSiteToggle" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="dark-style-row">
+        <span class="field-label">Style:</span>
+        <div class="dark-style-btns">
+          <button class="dark-style-btn active" data-style="invert">Invert</button>
+          <button class="dark-style-btn" data-style="dim">Dim</button>
+          <button class="dark-style-btn" data-style="grayscale">Grayscale</button>
+        </div>
+      </div>
+      <div class="dark-intensity-row">
+        <span class="field-label">Intensity:</span>
+        <input type="range" id="darkIntensity" min="50" max="100" value="90" class="slider" />
+        <span id="darkIntensityVal" class="dark-intensity-val">90%</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== INSIGHTS SECTION ===== -->
+<section class="view" id="view-insights">
+  <header class="app-header app-header-simple">
+    <span class="view-title">Insights</span>
+    <select id="insightsDatePicker" class="picker"></select>
+  </header>
+
+  <div class="insights-scroll">
+    <!-- Live tracking bar -->
+    <div class="live-bar">
+      <span class="live-dot"></span>
+      <span id="liveDomain">—</span>
+      <span id="liveTime" class="live-time">0s</span>
+    </div>
+
+    <!-- Today's Numbers -->
+    <div class="insight-grid">
+      <div class="insight-stat">
+        <div class="insight-stat-val" id="isFocusTime">0m</div>
+        <div class="insight-stat-label">Focus time</div>
+      </div>
+      <div class="insight-stat">
+        <div class="insight-stat-val" id="isScore">—</div>
+        <div class="insight-stat-label">Score</div>
+      </div>
+      <div class="insight-stat">
+        <div class="insight-stat-val" id="isTasksDone">0</div>
+        <div class="insight-stat-label">Tasks done</div>
+      </div>
+      <div class="insight-stat">
+        <div class="insight-stat-val" id="isFocusRatio">—</div>
+        <div class="insight-stat-label">Focus ratio</div>
+      </div>
+    </div>
+
+    <!-- Score breakdown -->
+    <div class="insights-card">
+      <div class="insights-card-title">Productivity Score</div>
+      <div class="score-main-row">
+        <div class="score-big" id="insightScoreVal">—</div>
+        <div class="score-trend" id="insightScoreTrend"></div>
+      </div>
+      <div class="score-factors">
+        <div class="sf-row">
+          <span class="sf-label">Focus Time</span>
+          <div class="sf-bar-bg"><div class="sf-bar" id="sf-focus" style="width:0%"></div></div>
+          <span id="sf-focus-val" class="sf-val">0</span>
+        </div>
+        <div class="sf-row">
+          <span class="sf-label">Pomodoros</span>
+          <div class="sf-bar-bg"><div class="sf-bar pomo" id="sf-pomo" style="width:0%"></div></div>
+          <span id="sf-pomo-val" class="sf-val">0</span>
+        </div>
+        <div class="sf-row">
+          <span class="sf-label">Tasks Done</span>
+          <div class="sf-bar-bg"><div class="sf-bar tasks" id="sf-tasks" style="width:0%"></div></div>
+          <span id="sf-tasks-val" class="sf-val">0</span>
+        </div>
+        <div class="sf-row">
+          <span class="sf-label">Focus Ratio</span>
+          <div class="sf-bar-bg"><div class="sf-bar block" id="sf-block" style="width:0%"></div></div>
+          <span id="sf-block-val" class="sf-val">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7-day trend -->
+    <div class="insights-card">
+      <div class="insights-card-title">7-Day Focus Trend</div>
+      <canvas id="dayGraph" width="340" height="90"></canvas>
+    </div>
+
+    <!-- Site tracking -->
+    <div class="insights-card">
+      <div class="insights-card-title">Today's Sites</div>
+      <div id="siteList" class="site-list"></div>
+    </div>
+
+    <!-- Achievements -->
+    <div class="insights-card">
+      <div class="insights-card-title">Achievements</div>
+      <div id="badgeGrid" class="badge-grid-compact"></div>
+    </div>
+
+    <!-- Coding Dashboard -->
+    <div class="insights-card">
+      <div class="insights-card-title">Coding Dashboard</div>
+      <div class="coding-stats-row">
+        <div class="coding-stat">
+          <div class="coding-stat-val" id="codingToday">0m</div>
+          <div class="coding-stat-label">Today</div>
+        </div>
+        <div class="coding-stat">
+          <div class="coding-stat-val" id="codingWeek">0m</div>
+          <div class="coding-stat-label">This week</div>
+        </div>
+        <div class="coding-stat">
+          <div class="coding-stat-val" id="codingStreak">0</div>
+          <div class="coding-stat-label">Streak</div>
+        </div>
+      </div>
+      <div class="insights-sublabel">Platform breakdown</div>
+      <div id="codingPlatforms" class="coding-platforms"></div>
+    </div>
+
+    <!-- Productivity Heatmap -->
+    <div class="insights-card">
+      <div class="insights-card-title">Productivity Heatmap</div>
+      <div class="streak-row-compact">
+        <div class="streak-item">
+          <span id="currentStreak" class="streak-num">0</span>
+          <span class="streak-lbl">Current streak</span>
+        </div>
+        <div class="streak-item">
+          <span id="longestStreak" class="streak-num accent">0</span>
+          <span class="streak-lbl">Longest</span>
+        </div>
+        <div class="streak-item">
+          <span id="totalProductiveDays" class="streak-num green">0</span>
+          <span class="streak-lbl">Prod. days</span>
+        </div>
+      </div>
+      <div id="heatmapWrap" class="heatmap-wrap">
+        <canvas id="heatmapCanvas"></canvas>
+        <div id="heatmapTooltip" class="heatmap-tooltip"></div>
+      </div>
+    </div>
+
+    <!-- Weekly Report -->
+    <div class="insights-card">
+      <div class="insights-card-title">Weekly Report</div>
+      <div id="reportContent" class="report-content"></div>
+      <div class="report-export-row">
+        <button id="exportJsonBtn" class="btn btn-ghost btn-sm">JSON</button>
+        <button id="exportCsvBtn" class="btn btn-ghost btn-sm">CSV</button>
+        <button id="exportDataBtn" class="btn btn-ghost btn-sm">All Data</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SETTINGS SECTION ===== -->
+<section class="view" id="view-settings">
+  <header class="app-header app-header-simple">
+    <span class="view-title">Settings</span>
+  </header>
+
+  <div class="settings-scroll">
+
+    <!-- Appearance -->
+    <div class="settings-group">
+      <div class="settings-group-title">Appearance</div>
+
+      <div class="settings-row">
+        <span class="settings-row-label">Accent color</span>
+      </div>
+      <div class="theme-grid">
+        <button class="theme-btn active" data-theme="gold">Gold</button>
+        <button class="theme-btn" data-theme="blue">Blue</button>
+        <button class="theme-btn" data-theme="green">Green</button>
+        <button class="theme-btn" data-theme="pink">Pink</button>
+      </div>
+
+      <div class="settings-row" style="margin-top: 12px;">
+        <span class="settings-row-label">Background</span>
+      </div>
+      <div class="theme-grid">
+        <button class="bg-btn active" data-bg="solid">Solid</button>
+        <button class="bg-btn" data-bg="glassy">Glassy</button>
+      </div>
+
+      <div class="settings-row" style="margin-top: 12px;">
+        <span class="settings-row-label">Font Style</span>
+      </div>
+      <div class="theme-grid">
+        <button class="font-btn active" data-font="inter" style="font-family: var(--font);">Modern</button>
+        <button class="font-btn" data-font="mono" style="font-family: var(--font-mono);">Mono</button>
+        <button class="font-btn" data-font="serif" style="font-family: Georgia, serif;">Serif</button>
+      </div>
+    </div>
+
+    <!-- Data Management -->
+    <div class="settings-group">
+      <div class="settings-group-title">Data</div>
+      <div class="settings-btn-group">
+        <button id="backupBtn" class="settings-action-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Backup Data
+        </button>
+        <label class="settings-action-btn" style="cursor:pointer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Restore Data
+          <input type="file" id="restoreInput" accept=".json" style="display:none" />
+        </label>
+        <button id="exportAllBtn" class="settings-action-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export JSON
+        </button>
+        <button id="exportCsvAllBtn" class="settings-action-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </button>
+      </div>
+    </div>
+
+    <!-- Sync -->
+    <div class="settings-group">
+      <div class="settings-group-title">Sync</div>
+      <div class="settings-field">
+        <label class="field-label" for="syncApiUrl">API URL</label>
+        <input id="syncApiUrl" class="text-input" placeholder="https://api.example.com/sync" />
+      </div>
+      <div class="settings-field">
+        <label class="field-label" for="syncKey">Sync key</label>
+        <input id="syncKey" class="text-input" type="password" placeholder="Your sync key" />
+      </div>
+      <div class="settings-row-toggle">
+        <span class="settings-row-label">Auto-sync</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="autoSyncToggle" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <button id="manualSyncBtn" class="settings-action-btn">Manual Sync Now</button>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="settings-group settings-danger-group">
+      <div class="settings-group-title danger-title">Danger Zone</div>
+      <button id="resetStatsBtn" class="settings-action-btn danger-btn">Reset Statistics</button>
+      <button id="resetAllBtn" class="settings-action-btn danger-btn">Reset All Data</button>
+    </div>
+
+    <div class="settings-version">LockIn v1.0.0</div>
+  </div>
+</section>
+
+<!-- ===== BOTTOM NAV ===== -->
+<nav class="bottom-nav" role="navigation" aria-label="Primary navigation">
+  <button class="nav-btn active" data-view="home" aria-label="Home" aria-current="page">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+    <span class="nav-label">Home</span>
+  </button>
+  <button class="nav-btn" data-view="focus" aria-label="Focus">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+    </svg>
+    <span class="nav-label">Focus</span>
+  </button>
+  <button class="nav-btn" data-view="tools" aria-label="Tools">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
+    </svg>
+    <span class="nav-label">Tools</span>
+  </button>
+  <button class="nav-btn" data-view="insights" aria-label="Insights">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+    </svg>
+    <span class="nav-label">Insights</span>
+  </button>
+  <button class="nav-btn" data-view="settings" aria-label="Settings">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+    </svg>
+    <span class="nav-label">Settings</span>
+  </button>
+</nav>
+
+<script src="popup.js"></script>
+</body>
+</html>

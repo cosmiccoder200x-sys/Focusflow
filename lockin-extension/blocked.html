@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Site Blocked — LockIn</title>
+  <link rel="stylesheet" href="blocked.css" />
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+
+  <div class="warning-box">
+    <div class="brand-mark">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <h1 class="warn-title">SITE BLOCKED</h1>
+    <p class="warn-msg">You blocked this site for a reason.<br>Stay locked in. Go do the work.</p>
+
+    <div class="warn-divider"></div>
+
+    <div class="warn-tasks" id="warnTasks">
+      <div class="warn-tasks-label">Focus on your tasks</div>
+      <ul id="warnTaskList" class="warn-task-list"></ul>
+    </div>
+
+    <button class="close-btn" onclick="window.history.back()">← Go Back</button>
+    <button class="close-btn close-btn-ghost" onclick="window.close()">Close Tab</button>
+  </div>
+
+  <script src="blocked.js"></script>
+</body>
+</html>
