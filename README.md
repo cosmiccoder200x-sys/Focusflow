@@ -98,18 +98,20 @@ focusflow/
 
 ---
 
-## 🔮 HabitOS Sync (Coming Soon)
+## 🔮 RangOS Sync
 
-`syncManager.js` is prepared for future cloud sync with [HabitOS](https://github.com/yourusername/habitos).
+FocusFlow syncs your daily screen-time data to your Notion "RangOS — Screen Time" database automatically.
 
-```js
-exportUserData()   // structured full export
-importUserData()   // restore from payload
-syncQueue()        // pending operations queue
-preparePayload()   // HabitOS API-ready format
+```
+FocusFlow Extension → Chrome Storage → sync-service.js → Vercel API → Notion → RangOS
 ```
 
-All data currently stays **100% local** via Chrome Storage API.
+- **Every 15 minutes** — periodic sync of today's data
+- **Daily at 23:58** — end-of-day final sync
+- **Manual sync** — via the extension options page
+- **Secure** — shared secret authentication, Notion token never leaves the server
+
+See [SETUP.md](SETUP.md) for full deployment and configuration instructions.
 
 ---
 
@@ -119,7 +121,7 @@ All data currently stays **100% local** via Chrome Storage API.
 |------------|-----|
 | `tabs` | Track active tab URL |
 | `storage` | Save all data locally |
-| `alarms` | 1-second tick + Pomodoro timer |
+| `alarms` | 1-second tick + Pomodoro timer + RangOS sync |
 | `notifications` | Pomodoro completion alerts |
 | `scripting` | Dark mode CSS injection + video speed |
 | `activeTab` | Read current tab |
@@ -130,3 +132,4 @@ All data currently stays **100% local** via Chrome Storage API.
 ## 📄 License
 
 MIT — Built for engineering students & professionals.
+

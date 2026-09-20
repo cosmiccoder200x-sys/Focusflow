@@ -1,0 +1,15 @@
+{
+  "name": "focusflow-rangos-backend",
+  "version": "1.1.0",
+  "private": true,
+  "description": "FocusFlow → RangOS screen-time sync backend (Vercel serverless)",
+  "scripts": {
+    "test": "node api/__tests__/screen-time.test.js"
+  },
+  "dependencies": {
+    "@notionhq/client": "^2.2.15"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

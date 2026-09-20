@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusFlow — RangOS Sync Settings</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f0f0f;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+      background: #1a1a1a;
+      border-radius: 16px;
+      border: 1px solid #2a2a2a;
+      padding: 32px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 28px;
+    }
+
+    .field {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #aaa;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #111;
+      color: #e0e0e0;
+      font-size: 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      outline: none;
+      border-color: #5b6eea;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-top: 1px solid #222;
+      border-bottom: 1px solid #222;
+      margin-bottom: 24px;
+    }
+
+    .toggle-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ccc;
+    }
+
+    /* Toggle switch */
+    .switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #333;
+      border-radius: 24px;
+      transition: 0.3s;
+    }
+
+    .slider::before {
+      content: "";
+      position: absolute;
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: #888;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+
+    .switch input:checked + .slider {
+      background: #5b6eea;
+    }
+
+    .switch input:checked + .slider::before {
+      transform: translateX(20px);
+      background: #fff;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    button {
+      flex: 1;
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #5b6eea;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #4a5dd4;
+    }
+
+    .btn-secondary {
+      background: #2a2a2a;
+      color: #ccc;
+      border: 1px solid #333;
+    }
+
+    .btn-secondary:hover {
+      background: #333;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Status area */
+    .status {
+      margin-top: 20px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .status.success {
+      display: block;
+      background: #0d2818;
+      border: 1px solid #1a5e2a;
+      color: #4ade80;
+    }
+
+    .status.error {
+      display: block;
+      background: #2a0d0d;
+      border: 1px solid #5e1a1a;
+      color: #f87171;
+    }
+
+    .status.info {
+      display: block;
+      background: #0d1a2a;
+      border: 1px solid #1a3a5e;
+      color: #60a5fa;
+    }
+
+    /* Sync status section */
+    .sync-info {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid #222;
+    }
+
+    .sync-info h3 {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .sync-detail {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 13px;
+    }
+
+    .sync-detail .label {
+      color: #888;
+    }
+
+    .sync-detail .value {
+      color: #ccc;
+      font-family: 'Consolas', monospace;
+    }
+
+    .sync-detail .value.error-text {
+      color: #f87171;
+    }
+
+    .sync-detail .value.success-text {
+      color: #4ade80;
+    }
+
+    .security-note {
+      margin-top: 24px;
+      padding: 12px 16px;
+      background: #1a1a2a;
+      border-radius: 8px;
+      border: 1px solid #2a2a3a;
+      font-size: 12px;
+      color: #888;
+      line-height: 1.5;
+    }
+
+    .security-note strong {
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔗 RangOS Sync Settings</h1>
+    <p class="subtitle">Configure FocusFlow → RangOS screen-time synchronization</p>
+
+    <div class="field">
+      <label for="endpoint">Webhook Endpoint</label>
+      <input type="text" id="endpoint" placeholder="https://your-domain.vercel.app/api/screen-time" spellcheck="false">
+      <p class="hint">Your Vercel backend URL — e.g. https://focusflow.vercel.app/api/screen-time</p>
+    </div>
+
+    <div class="field">
+      <label for="syncKey">Sync Key</label>
+      <input type="password" id="syncKey" placeholder="Shared secret between extension and backend" spellcheck="false">
+      <p class="hint">Must match the FOCUSFLOW_SYNC_KEY environment variable on your backend</p>
+    </div>
+
+    <div class="toggle-row">
+      <span class="toggle-label">Enable Automatic Sync</span>
+      <label class="switch">
+        <input type="checkbox" id="syncEnabled">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-primary" id="saveBtn">💾 Save</button>
+      <button class="btn-secondary" id="testBtn">🔄 Test Sync</button>
+      <button class="btn-secondary" id="syncNowBtn">⚡ Sync Now</button>
+    </div>
+
+    <div class="status" id="statusMsg"></div>
+
+    <div class="sync-info">
+      <h3>Sync Status</h3>
+      <div class="sync-detail">
+        <span class="label">Last Sync</span>
+        <span class="value" id="lastSyncTime">—</span>
+      </div>
+      <div class="sync-detail">
+        <span class="label">Reason</span>
+        <span class="value" id="lastSyncReason">—</span>
+      </div>
+      <div class="sync-detail">
+        <span class="label">Status</span>
+        <span class="value" id="lastSyncStatus">—</span>
+      </div>
+    </div>
+
+    <div class="security-note">
+      <strong>🔒 Security:</strong> Your sync key is stored locally in the extension and sent only
+      to your own backend. The Notion API token is <em>never</em> stored in or sent by this extension
+      — it lives only on the Vercel server.
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
