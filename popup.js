@@ -407,6 +407,7 @@ loadBlockList();
 
 const slider   = document.getElementById("speedSlider");
 const speedVal = document.getElementById("speedVal");
+const speedStatus = document.getElementById("speedStatus");
 
 function updateSpeedDisplay(val) {
   const n = parseFloat(val);
@@ -422,16 +423,50 @@ document.querySelectorAll(".preset-btn").forEach(btn => {
     btn.classList.add("active");
   });
 });
+
 document.getElementById("applySpeed").addEventListener("click", async () => {
   const spd = parseFloat(slider.value);
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab || !tab.id || !tab.url || /^(chrome|edge|about):/.test(tab.url)) {
+      throw new Error("This page does not allow playback controls.");
+    }
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: (rate) => { document.querySelectorAll("video, audio").forEach(el => el.playbackRate = rate); },
+      func: (rate) => {
+        const applyRate = (media) => {
+          if (!(media instanceof HTMLMediaElement)) return;
+          try {
+            media.playbackRate = rate;
+            media.defaultPlaybackRate = rate;
+          } catch (_) {}
+        };
+        document.querySelectorAll("video, audio").forEach(applyRate);
+        document.addEventListener("play", (event) => applyRate(event.target), true);
+        document.addEventListener("loadedmetadata", (event) => applyRate(event.target), true);
+        const observer = new MutationObserver((records) => {
+          for (const record of records) {
+            for (const node of record.addedNodes) {
+              if (node.nodeType !== 1) continue;
+              if (node.matches?.("video, audio")) applyRate(node);
+              node.querySelectorAll?.("video, audio").forEach(applyRate);
+            }
+          }
+        });
+        if (document.documentElement) {
+          observer.observe(document.documentElement, { childList: true, subtree: true });
+        }
+        window.__focusFlowSpeedObserver?.disconnect?.();
+        window.__focusFlowSpeedObserver = observer;
+        window.__focusFlowPlaybackRate = rate;
+      },
       args: [spd]
     });
-  } catch(e) { console.warn("Speed inject failed:", e.message); }
+    if (speedStatus) speedStatus.textContent = `Applied ${spd}× to this page. New videos will use the same speed.`;
+  } catch(e) {
+    if (speedStatus) speedStatus.textContent = e.message || "Could not control playback on this page.";
+    console.warn("Speed inject failed:", e.message);
+  }
 });
 
 // =============================================
@@ -1357,17 +1392,19 @@ loadTheme();
 // =============================================
 
 const DARK_STYLES = {
-  invert:    (i) => `html { filter: invert(${i}%) hue-rotate(180deg) !important; } img, video, canvas, iframe, svg { filter: invert(100%) hue-rotate(180deg) !important; }`,
-  dim:       (i) => `html { filter: brightness(${Math.round(i * 0.6)}%) !important; }`,
-  grayscale: (i) => `html { filter: grayscale(100%) invert(${i}%) !important; img, video, canvas { filter: invert(100%) !important; } }`,
+  smart: (i) => `html { color-scheme: dark !important; background: #101216 !important; filter: invert(${i}%) hue-rotate(180deg) !important; } img, video, canvas, iframe, svg, picture, [style*="background-image"] { filter: invert(100%) hue-rotate(180deg) !important; }`,
+  invert: (i) => `html { filter: invert(${i}%) hue-rotate(180deg) !important; } img, video, canvas, iframe, svg, picture, [style*="background-image"] { filter: invert(100%) hue-rotate(180deg) !important; }`,
+  dim: (i) => `html { background: #101216 !important; filter: brightness(${Math.max(35, 100 - Math.round(i * 0.45))}%) !important; color-scheme: dark !important; }`,
+  grayscale: (i) => `html { filter: grayscale(100%) invert(${i}%) hue-rotate(180deg) !important; } img, video, canvas, iframe, svg, picture { filter: invert(100%) hue-rotate(180deg) !important; }`
 };
 
-let darkState = { global: false, style: "invert", intensity: 90, sites: {} };
+let darkState = { global: false, style: "smart", intensity: 90, sites: {} };
 let darkCurrentDomain = null;
+let darkCurrentTabId = null;
 
 async function loadDarkState() {
   const r = await chrome.storage.local.get("darkMode");
-  if (r.darkMode) darkState = { ...darkState, ...r.darkMode };
+  if (r.darkMode) darkState = { ...darkState, ...r.darkMode, sites: { ...(r.darkMode.sites || {}) } };
 }
 
 async function saveDarkState() {
@@ -1375,51 +1412,75 @@ async function saveDarkState() {
 }
 
 function getDarkCSS(style, intensity) {
-  return DARK_STYLES[style] ? DARK_STYLES[style](intensity) : DARK_STYLES.invert(intensity);
+  return (DARK_STYLES[style] || DARK_STYLES.smart)(intensity);
 }
 
 async function applyDarkToTab(tabId, enabled, style, intensity) {
-  const css = getDarkCSS(style, intensity);
+  const target = { tabId };
   try {
-    // Remove existing first
-    await chrome.scripting.removeCSS({ target: { tabId }, css: getDarkCSS("invert", 90) }).catch(() => {});
-    await chrome.scripting.removeCSS({ target: { tabId }, css: getDarkCSS("dim", 90) }).catch(() => {});
-    await chrome.scripting.removeCSS({ target: { tabId }, css: getDarkCSS("grayscale", 90) }).catch(() => {});
-    // Remove all style variants
-    for (const s of ["invert","dim","grayscale"]) {
-      for (let i = 50; i <= 100; i += 5) {
-        await chrome.scripting.removeCSS({ target: { tabId }, css: getDarkCSS(s, i) }).catch(() => {});
+    for (const name of Object.keys(DARK_STYLES)) {
+      for (let level = 50; level <= 100; level += 5) {
+        await chrome.scripting.removeCSS({ target, css: getDarkCSS(name, level) }).catch(() => {});
       }
     }
-    if (enabled) {
-      await chrome.scripting.insertCSS({ target: { tabId }, css });
+    // Remove legacy v4 filters from earlier versions.
+    for (const name of ["invert", "dim", "grayscale"]) {
+      await chrome.scripting.removeCSS({ target, css: name === "invert"
+        ? `html { filter: invert(90%) hue-rotate(180deg) !important; } img, video, canvas, iframe, svg { filter: invert(100%) hue-rotate(180deg) !important; }`
+        : name === "dim" ? `html { filter: brightness(54%) !important; }`
+        : `html { filter: grayscale(100%) invert(90%) !important; img, video, canvas { filter: invert(100%) !important; }` }).catch(() => {});
     }
-  } catch(e) { console.warn("Dark mode inject failed:", e.message); }
+    if (enabled) await chrome.scripting.insertCSS({ target, css: getDarkCSS(style, intensity) });
+  } catch(e) {
+    console.warn("Dark mode injection failed:", e.message);
+  }
+}
+
+function isSupportedPage(tab) {
+  return Boolean(tab?.id && tab.url && !/^(chrome|edge|about|chrome-extension):/.test(tab.url));
+}
+
+function getDarkEnabledForDomain(domain) {
+  return darkState.sites[domain] !== undefined ? darkState.sites[domain] : darkState.global;
+}
+
+async function getCurrentDarkTab() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  return tab;
+}
+
+function updateQuickDarkButton(enabled) {
+  const button = document.getElementById("quickDarkToggle");
+  const label = document.getElementById("quickDarkLabel");
+  if (!button) return;
+  button.classList.toggle("is-on", Boolean(enabled));
+  button.setAttribute("aria-pressed", String(Boolean(enabled)));
+  if (label) label.textContent = enabled ? "Dark on" : "Dark";
 }
 
 async function syncDarkToCurrentTab() {
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab || !tab.url || tab.url.startsWith("chrome")) return;
-
+    const tab = await getCurrentDarkTab();
+    if (!isSupportedPage(tab)) {
+      darkCurrentDomain = null;
+      darkCurrentTabId = null;
+      updateQuickDarkButton(false);
+      return;
+    }
     const domain = new URL(tab.url).hostname.replace(/^www\./, "");
     darkCurrentDomain = domain;
+    darkCurrentTabId = tab.id;
     document.getElementById("darkCurrentSite").textContent = domain;
-
-    const siteEnabled = darkState.sites[domain];
-    const isEnabled = siteEnabled !== undefined ? siteEnabled : darkState.global;
-
-    document.getElementById("darkSiteToggle").checked = isEnabled;
+    const enabled = getDarkEnabledForDomain(domain);
+    document.getElementById("darkSiteToggle").checked = enabled;
     document.getElementById("darkGlobalToggle").checked = darkState.global;
     document.getElementById("darkIntensity").value = darkState.intensity;
     document.getElementById("darkIntensityVal").textContent = darkState.intensity + "%";
-
-    // Sync active style button
-    document.querySelectorAll(".dark-style-btn").forEach(b => {
-      b.classList.toggle("active", b.dataset.style === darkState.style);
+    document.querySelectorAll(".dark-style-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.style === darkState.style);
     });
-
-    await applyDarkToTab(tab.id, isEnabled, darkState.style, darkState.intensity);
+    updateQuickDarkButton(enabled);
+    await applyDarkToTab(tab.id, enabled, darkState.style, darkState.intensity);
     renderDarkSiteList();
   } catch(e) { console.warn("Dark sync error:", e); }
 }
@@ -1427,60 +1488,67 @@ async function syncDarkToCurrentTab() {
 async function applyDarkToAllTabs() {
   const tabs = await chrome.tabs.query({});
   for (const tab of tabs) {
-    if (!tab.url || tab.url.startsWith("chrome") || tab.url.startsWith("about")) continue;
+    if (!isSupportedPage(tab)) continue;
     try {
       const domain = new URL(tab.url).hostname.replace(/^www\./, "");
-      const siteEnabled = darkState.sites[domain];
-      const isEnabled = siteEnabled !== undefined ? siteEnabled : darkState.global;
-      await applyDarkToTab(tab.id, isEnabled, darkState.style, darkState.intensity);
+      await applyDarkToTab(tab.id, getDarkEnabledForDomain(domain), darkState.style, darkState.intensity);
     } catch {}
   }
+  await syncDarkToCurrentTab();
 }
 
 function renderDarkSiteList() {
   const list = document.getElementById("darkSiteList");
   const entries = Object.entries(darkState.sites);
   if (!entries.length) {
-    list.innerHTML = '<div class="empty-state">No per-site overrides yet.</div>'; return;
+    list.innerHTML = '<div class="empty-state">No per-site overrides yet.</div>';
+    return;
   }
   list.innerHTML = entries.map(([domain, enabled]) => `
     <div class="dark-site-row">
       <span class="dark-site-row-name">${domain}</span>
-      <span class="dark-site-row-mode">${enabled ? "🌙 Dark" : "☀️ Light"}</span>
-      <button class="dark-rm-btn" data-domain="${domain}">✕</button>
+      <span class="dark-site-row-mode">${enabled ? "Dark" : "Light"}</span>
+      <button class="dark-rm-btn" data-domain="${domain}" aria-label="Remove override for ${domain}">Remove</button>
     </div>`).join("");
   list.querySelectorAll(".dark-rm-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
       delete darkState.sites[btn.dataset.domain];
       await saveDarkState();
       renderDarkSiteList();
+      await applyDarkToAllTabs();
     });
   });
 }
 
-// Global toggle
+document.getElementById("quickDarkToggle")?.addEventListener("click", async () => {
+  if (!darkCurrentDomain || !darkCurrentTabId) {
+    await syncDarkToCurrentTab();
+    return;
+  }
+  const next = !getDarkEnabledForDomain(darkCurrentDomain);
+  darkState.sites[darkCurrentDomain] = next;
+  await saveDarkState();
+  await applyDarkToTab(darkCurrentTabId, next, darkState.style, darkState.intensity);
+  document.getElementById("darkSiteToggle").checked = next;
+  updateQuickDarkButton(next);
+  renderDarkSiteList();
+});
+
 document.getElementById("darkGlobalToggle").addEventListener("change", async (e) => {
   darkState.global = e.target.checked;
   await saveDarkState();
   await applyDarkToAllTabs();
-  if (darkCurrentDomain) {
-    const siteOverride = darkState.sites[darkCurrentDomain];
-    document.getElementById("darkSiteToggle").checked =
-      siteOverride !== undefined ? siteOverride : darkState.global;
-  }
 });
 
-// Per-site toggle
 document.getElementById("darkSiteToggle").addEventListener("change", async (e) => {
-  if (!darkCurrentDomain) return;
+  if (!darkCurrentDomain || !darkCurrentTabId) return;
   darkState.sites[darkCurrentDomain] = e.target.checked;
   await saveDarkState();
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (tab) await applyDarkToTab(tab.id, e.target.checked, darkState.style, darkState.intensity);
+  await applyDarkToTab(darkCurrentTabId, e.target.checked, darkState.style, darkState.intensity);
+  updateQuickDarkButton(e.target.checked);
   renderDarkSiteList();
 });
 
-// Style selector
 document.querySelectorAll(".dark-style-btn").forEach(btn => {
   btn.addEventListener("click", async () => {
     darkState.style = btn.dataset.style;
@@ -1490,13 +1558,11 @@ document.querySelectorAll(".dark-style-btn").forEach(btn => {
   });
 });
 
-// Intensity slider
 document.getElementById("darkIntensity").addEventListener("input", async (e) => {
-  darkState.intensity = parseInt(e.target.value);
+  darkState.intensity = parseInt(e.target.value, 10);
   document.getElementById("darkIntensityVal").textContent = darkState.intensity + "%";
   await saveDarkState();
   await applyDarkToAllTabs();
 });
 
-// Init dark mode tab
 loadDarkState().then(() => syncDarkToCurrentTab());
