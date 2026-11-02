@@ -140,6 +140,19 @@ The speed control works with supported HTML5 video/audio players. Some websites 
 
 You can also use the Home quick toggle for the current website. Some websites may render imperfectly with automatic dark-mode CSS; switch the site off or try another style if that happens.
 
+#### Website Profiles (branch preview)
+
+1. Open **Tools → Profiles**.
+2. Enter a domain such as `youtube.com`, or select **Use current** while visiting the website.
+3. Choose whether automatic profile rules are enabled.
+4. Set a default playback speed for HTML5 video/audio players.
+5. Optionally set a daily time limit in minutes. Use `0` for no limit.
+6. Choose whether dark mode follows the global setting or is always on/off for that domain.
+7. Select **Save website profile**. Use **Edit** or **Remove** to manage saved profiles.
+
+Profiles match the saved domain and its subdomains. Daily limits use FocusFlow's existing per-site screen-time totals; when a limit is reached, the website is redirected to FocusFlow's blocked page. Browser-internal pages cannot be controlled. Profiles are stored locally in Chrome and are included in JSON backup/export files.
+
+
 ### 4. Insights — understand your habits
 
 Open **Insights** and choose the panel you want:
@@ -224,15 +237,15 @@ For backend development and deployment, follow [SETUP.md](SETUP.md). Do not comm
 
 ## Roadmap
 
-### FocusFlow 2.0 — planned
+### FocusFlow 2.0 — in development
 
 The next productivity upgrade is being developed separately and is intended to connect:
 
 - **Smart Focus Mode:** 25-, 50-, 90-minute, and custom sessions, session-aware site blocking, pause/resume, and an emergency override.
 - **Daily Goals:** daily focus-time and task targets, progress indicators, and streak history.
-- **Website Profiles:** per-site preferences, playback speed, time limits, blocking rules, and enable/disable controls.
+- **Website Profiles:** an initial implementation is available on this feature branch: per-site playback speed, daily time limits, dark-mode overrides, and enable/disable controls. It still needs browser-level regression testing before release.
 
-These items are **planned/in development** and should not be considered available in the current release until they are implemented and documented as released.
+Smart Focus Mode and Daily Goals remain planned. Website Profiles are a branch preview only; do not treat them as released until the pull request is reviewed, tested, and merged.
 
 ---
 
