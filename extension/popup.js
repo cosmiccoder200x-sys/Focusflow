@@ -405,69 +405,54 @@ loadBlockList();
 // SPEED TAB (preserved)
 // =============================================
 
-const slider   = document.getElementById("speedSlider");
+const slider = document.getElementById("speedSlider");
 const speedVal = document.getElementById("speedVal");
 const speedStatus = document.getElementById("speedStatus");
-
 function updateSpeedDisplay(val) {
-  const n = parseFloat(val);
+  const n = Math.min(4, Math.max(0.25, parseFloat(val) || 1));
+  slider.value = n;
   speedVal.textContent = Number.isInteger(n) ? n.toFixed(1) : n.toFixed(2).replace(/0+$/, "");
 }
-
 slider.addEventListener("input", () => updateSpeedDisplay(slider.value));
-document.querySelectorAll(".preset-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const spd = parseFloat(btn.dataset.speed);
-    slider.value = spd; updateSpeedDisplay(spd);
-    document.querySelectorAll(".preset-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-  });
-});
-
-document.getElementById("applySpeed").addEventListener("click", async () => {
-  const spd = parseFloat(slider.value);
+document.querySelectorAll(".preset-btn").forEach(btn => btn.addEventListener("click", () => {
+  const spd = Math.min(4, parseFloat(btn.dataset.speed));
+  updateSpeedDisplay(spd);
+  document.querySelectorAll(".preset-btn").forEach(b => b.classList.toggle("active", b === btn));
+}));
+async function applySelectedSpeed() {
+  const spd = Math.min(4, Math.max(0.25, parseFloat(slider.value) || 1));
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab || !tab.id || !tab.url || /^(chrome|edge|about):/.test(tab.url)) {
-      throw new Error("This page does not allow playback controls.");
-    }
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: (rate) => {
-        const applyRate = (media) => {
-          if (!(media instanceof HTMLMediaElement)) return;
-          try {
-            media.playbackRate = rate;
-            media.defaultPlaybackRate = rate;
-          } catch (_) {}
-        };
-        document.querySelectorAll("video, audio").forEach(applyRate);
-        document.addEventListener("play", (event) => applyRate(event.target), true);
-        document.addEventListener("loadedmetadata", (event) => applyRate(event.target), true);
-        const observer = new MutationObserver((records) => {
-          for (const record of records) {
-            for (const node of record.addedNodes) {
-              if (node.nodeType !== 1) continue;
-              if (node.matches?.("video, audio")) applyRate(node);
-              node.querySelectorAll?.("video, audio").forEach(applyRate);
-            }
-          }
-        });
-        if (document.documentElement) {
-          observer.observe(document.documentElement, { childList: true, subtree: true });
-        }
-        window.__focusFlowSpeedObserver?.disconnect?.();
-        window.__focusFlowSpeedObserver = observer;
-        window.__focusFlowPlaybackRate = rate;
-      },
-      args: [spd]
-    });
+    if (!tab || !tab.id || !tab.url || /^(chrome|edge|about):/.test(tab.url)) throw new Error("This page does not allow playback controls.");
+    await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: (rate) => {
+      const applyRate = media => { if (media instanceof HTMLMediaElement) try { media.playbackRate = rate; media.defaultPlaybackRate = rate; } catch (_) {} };
+      document.querySelectorAll("video, audio").forEach(applyRate);
+      document.addEventListener("play", event => applyRate(event.target), true);
+      document.addEventListener("loadedmetadata", event => applyRate(event.target), true);
+      const observer = new MutationObserver(records => { for (const record of records) for (const node of record.addedNodes) {
+        if (node.nodeType !== 1) continue;
+        if (node.matches?.("video, audio")) applyRate(node);
+        node.querySelectorAll?.("video, audio").forEach(applyRate);
+      }});
+      if (document.documentElement) observer.observe(document.documentElement, { childList: true, subtree: true });
+      window.__focusFlowSpeedObserver?.disconnect?.();
+      window.__focusFlowSpeedObserver = observer;
+      window.__focusFlowPlaybackRate = rate;
+    }, args: [spd] });
     if (speedStatus) speedStatus.textContent = `Applied ${spd}× to this page. New videos will use the same speed.`;
   } catch(e) {
     if (speedStatus) speedStatus.textContent = e.message || "Could not control playback on this page.";
     console.warn("Speed inject failed:", e.message);
   }
-});
+}
+document.getElementById("applySpeed").addEventListener("click", applySelectedSpeed);
+document.querySelectorAll("[data-home-speed]").forEach(btn => btn.addEventListener("click", () => {
+  const rate = Math.min(4, Number(btn.dataset.homeSpeed));
+  slider.value = String(rate); updateSpeedDisplay(rate);
+  document.querySelectorAll(".preset-btn").forEach(b => b.classList.toggle("active", Number(b.dataset.speed) === rate));
+  applySelectedSpeed();
+}));
+document.getElementById("homeDarkShortcut")?.addEventListener("click", () => document.getElementById("quickDarkToggle")?.click());
 
 // =============================================
 // POMO TAB (preserved)
@@ -1313,12 +1298,8 @@ document.getElementById("exportDataBtn").addEventListener("click", async () => {
 
 // Theme switching
 async function loadTheme() {
-  const r = await chrome.storage.local.get("theme");
-  const t = r.theme || "gold";
-  document.body.setAttribute("data-theme", t);
-  document.querySelectorAll(".theme-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.theme === t);
-  });
+  // Preserve the existing stored theme value; the redesigned interface uses a fixed emerald palette.
+  document.body.setAttribute("data-theme", "emerald");
 }
 
 document.querySelectorAll(".theme-btn").forEach(btn => {

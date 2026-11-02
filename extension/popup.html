@@ -12,7 +12,7 @@
 <!-- HEADER -->
 <header class="header">
   <div class="brand">
-    <div class="brand-icon-wrap">⚡</div>
+    <div class="brand-icon-wrap" aria-label="FocusFlow orbit mark"><svg viewBox="0 0 32 32" role="img" aria-hidden="true"><ellipse cx="16" cy="16" rx="12" ry="5.5"/><ellipse cx="16" cy="16" rx="6" ry="12" transform="rotate(38 16 16)"/><circle cx="16" cy="16" r="3.3"/><circle cx="27" cy="12" r="1.8"/></svg></div>
     <div>
       <div class="brand-name">FocusFlow</div>
       <div class="brand-version">PRODUCTIVITY WORKSPACE</div>
@@ -60,27 +60,17 @@
   </div>
 </nav>
 
-<!-- ===== TRACK TAB ===== -->
-<section class="tab-content active" id="tab-track">
-  <div class="live-bar">
-    <span class="live-dot"></span>
-    <span id="liveDomain">—</span>
-    <span id="liveTime" class="live-time">0s</span>
+<!-- ===== HOME TAB: MINIMAL OVERVIEW ===== -->
+<section class="tab-content active home-overview" id="tab-track">
+  <div class="home-welcome"><div class="eyebrow">YOUR FOCUS SPACE</div><h1>Make room<br><span>for deep work.</span></h1><p class="home-subtitle">A quieter workspace for your day.</p></div>
+  <div class="home-live-card"><div class="home-live-top"><span class="live-dot"></span><span>NOW TRACKING</span><span id="liveTime" class="home-live-time">0s</span></div><div id="liveDomain" class="home-live-domain">—</div><div class="home-live-bottom"><span>Screen time today</span><strong id="totalUsage">0s</strong></div></div>
+  <div class="home-section-heading"><span>QUICK CONTROLS</span><span class="home-section-note">ONE-TAP TOOLS</span></div>
+  <div class="home-quick-grid">
+    <button class="home-tool-card" id="homeDarkShortcut" type="button"><span class="home-tool-icon">◐</span><span class="home-tool-copy"><strong>Website dark mode</strong><small>Toggle for this site</small></span><span class="home-tool-arrow">↗</span></button>
+    <div class="home-tool-card home-speed-card"><span class="home-tool-icon">▷</span><span class="home-tool-copy"><strong>Video speed</strong><small>Choose playback rate</small></span><div class="home-speed-options"><button type="button" data-home-speed="1">1×</button><button type="button" data-home-speed="1.5">1.5×</button><button type="button" data-home-speed="2">2×</button><button type="button" data-home-speed="3">3×</button><button type="button" data-home-speed="4">4×</button></div></div>
   </div>
-  <div class="date-row">
-    <label class="small-label">Date:</label>
-    <select id="datePicker" class="picker"></select>
-  </div>
-  <div class="chart-section-label">Today's Breakdown</div>
-  <canvas id="chart" width="362" height="130"></canvas>
-  <div class="chart-legend">
-    <span><span class="legend-dot study"></span>Study</span>
-    <span><span class="legend-dot waste"></span>Waste</span>
-    <span><span class="legend-dot total"></span>Total</span>
-  </div>
-  <div class="chart-section-label">7-Day History</div>
-  <canvas id="dayGraph" width="362" height="100"></canvas>
-  <div id="siteList" class="site-list"></div>
+  <div class="home-footnote"><span class="home-orbit-dot"></span> Stay intentional. The rest can wait.</div>
+  <div class="home-legacy-data" aria-hidden="true"><select id="datePicker" class="picker"></select><canvas id="chart" width="362" height="130"></canvas><canvas id="dayGraph" width="362" height="100"></canvas><div id="siteList" class="site-list"></div></div>
 </section>
 
 <!-- ===== BLOCK TAB ===== -->
@@ -99,7 +89,7 @@
   <div class="speed-display">
     <span id="speedVal">1.0</span><span class="speed-unit">x</span>
   </div>
-  <input type="range" id="speedSlider" min="0.25" max="15" step="0.25" value="1" class="slider" />
+  <input type="range" id="speedSlider" min="0.25" max="4" step="0.25" value="1" class="slider" />
   <div class="preset-row">
     <button class="preset-btn" data-speed="0.5">0.5x</button>
     <button class="preset-btn" data-speed="0.75">0.75x</button>
@@ -109,9 +99,6 @@
     <button class="preset-btn" data-speed="1.75">1.75x</button>
     <button class="preset-btn" data-speed="2">2x</button>
     <button class="preset-btn" data-speed="2.5">2.5x</button>
-    <button class="preset-btn" data-speed="5">5x</button>
-    <button class="preset-btn" data-speed="10">10x</button>
-    <button class="preset-btn" data-speed="15">15x</button>
   </div>
   <button id="applySpeed" class="btn btn-primary" style="margin-top:12px;width:100%">Apply to Page</button>
   <p id="speedStatus" class="tool-status" role="status">Works on YouTube and HTML5 video/audio players. Keeps the selected speed for videos loaded later.</p>
