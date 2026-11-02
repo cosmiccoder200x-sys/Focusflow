@@ -1284,7 +1284,7 @@ document.getElementById("exportCsvBtn").addEventListener("click", async () => {
 });
 
 document.getElementById("exportDataBtn").addEventListener("click", async () => {
-  const keys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","achievements","dsaProgress","siteProfiles"];
+  const keys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","achievements","dsaProgress","siteProfiles","darkMode"];
   const r = await chrome.storage.local.get(keys);
   const payload = { meta: { app: "focusflow", version: "4.0", exportedAt: new Date().toISOString() }, ...r };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
