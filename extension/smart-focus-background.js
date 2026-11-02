@@ -91,6 +91,21 @@
     await finishSession("completed");
   }
 
+  async function enforceCurrentTab(state) {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+      if (!tab?.id || !tab.url || /^(chrome|edge|about|chrome-extension):/.test(tab.url)) return;
+      const domain = normalizeDomain(tab.url);
+      if (!domain) return;
+      const matches = site => domain === site || domain.endsWith("." + site);
+      if ((state.allowedSites || []).some(matches)) return;
+      const saved = await chrome.storage.local.get("blockedSites");
+      const base = Array.isArray(saved.blockedSites) ? saved.blockedSites : [];
+      const blocked = (state.blockedSites || []).some(matches) || base.some(site => matches(normalizeDomain(site)));
+      if (blocked) await chrome.tabs.update(tab.id, { url: chrome.runtime.getURL("blocked.html") });
+    } catch (_) {}
+  }
+
   async function start(msg) {
     const current = await getState();
     if (["running", "paused"].includes(current.status)) {
@@ -119,6 +134,7 @@
     };
     await saveState(state);
     await chrome.alarms.create(ALARM, { when: state.endTime });
+    await enforceCurrentTab(state);
     return { ok: true, state };
   }
 
@@ -143,6 +159,7 @@
     const next = { ...state, status: "running", startedAt: now, endTime: now + remainingSec * 1000, overrideUntil: null };
     await saveState(next);
     await chrome.alarms.create(ALARM, { when: next.endTime });
+    await enforceCurrentTab(next);
     return { ok: true, state: next };
   }
 
@@ -163,7 +180,7 @@
       SMART_FOCUS_PAUSE: () => pause(),
       SMART_FOCUS_RESUME: () => resume(),
       SMART_FOCUS_OVERRIDE: () => override(),
-      SMART_FOCUS_END: () => finishSession("ended")
+      SMART_FOCUS_END: async () => ({ ok: true, state: await finishSession("ended") })
     };
     const action = actions[msg.type];
     if (!action) return;
