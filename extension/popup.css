@@ -999,3 +999,40 @@ button.home-tool-card{cursor:pointer;transition:transform .18s ease,border-color
 .sf-history-title{font-size:10px;color:var(--text);font-weight:650}
 .sf-history-meta{font-size:9px;color:var(--text3);margin-top:3px}
 .sf-history-time{font:600 10px var(--font-mono);color:var(--accent);white-space:nowrap}
+
+
+/* ===== DAILY GOALS ===== */
+.goals-intro{margin:0 0 13px;color:var(--text2);font-size:11px;line-height:1.55}
+.goals-progress-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.goal-progress-card,.goal-week-card,.goal-settings-card{min-width:0;padding:13px 10px;border:1px solid var(--border2);border-radius:14px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018))}
+.goal-progress-card{display:flex;flex-direction:column;align-items:center;gap:10px}
+.goal-ring{position:relative;width:112px;height:112px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--accent) 0%,rgba(255,255,255,.075) 0);transition:background .35s ease}
+.goal-ring:before{content:"";position:absolute;inset:8px;border-radius:50%;background:#101711;border:1px solid rgba(255,255,255,.07)}
+.goal-ring-center{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.goal-ring-center strong{font:700 23px var(--font-mono);color:var(--text)}
+.goal-ring-center span{font-size:8px;letter-spacing:1.3px;color:var(--text3);font-weight:800}
+.goal-card-copy{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}
+.goal-card-copy strong{font-size:11px;color:var(--text)}
+.goal-card-copy span{font-size:9px;color:var(--text3)}
+.goal-streak-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0}
+.goal-streak-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:11px 4px;border:1px solid var(--border);border-radius:11px;background:rgba(255,255,255,.025)}
+.goal-streak-card strong{font:700 20px var(--font-mono);color:var(--accent)}
+.goal-streak-card span{font-size:8px;color:var(--text3);text-align:center}
+.goal-week-card{margin-bottom:10px}
+.goal-week-heading,.goal-settings-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+.goal-week-heading strong,.goal-settings-heading strong{font-size:11px;color:var(--text)}
+.goal-week-heading span,.goal-settings-heading span{font-size:9px;color:var(--text3)}
+.goal-week-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.goal-week-day{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--text3);font-size:8px}
+.goal-week-day i{width:17px;height:17px;border-radius:50%;border:1px solid var(--border2);background:rgba(255,255,255,.04)}
+.goal-week-day.is-complete i{background:var(--accent);border-color:var(--accent);box-shadow:0 0 12px rgba(84,227,154,.2)}
+.goal-week-day small{font:8px var(--font-mono);color:var(--text3)}
+.goal-settings-card{display:flex;flex-direction:column;gap:10px}
+.goal-settings-heading{margin-bottom:0}
+.goal-settings-fields{display:flex;flex-direction:column;gap:9px}
+.goal-settings-fields label{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;color:var(--text2)}
+.goal-settings-fields label span{display:flex;align-items:center;gap:5px;color:var(--text3)}
+.goal-settings-fields input{width:58px;padding:7px;border-radius:8px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font:11px var(--font-mono)}
+.goal-settings-card .btn{width:100%}
+.goal-status{min-height:12px;margin:0;color:var(--accent);font-size:9px}
+.goal-note{margin:0;color:var(--text3);font-size:9px;line-height:1.5}
