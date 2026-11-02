@@ -364,7 +364,7 @@ function focusFlowSupportedTab(tab) {
   return Boolean(tab?.id && tab.url && !/^(chrome|edge|about|chrome-extension):/.test(tab.url));
 }
 
-async function focusFlowApplyDark(tab) {
+async function focusFlowApplyDark(tab, previousState = null) {
   if (!focusFlowSupportedTab(tab)) return;
   try {
     const saved = await chrome.storage.local.get("darkMode");
@@ -372,11 +372,15 @@ async function focusFlowApplyDark(tab) {
     const domain = new URL(tab.url).hostname.replace(/^www\./, "");
     const enabled = state.sites?.[domain] !== undefined ? state.sites[domain] : Boolean(state.global);
     const target = { tabId: tab.id };
-    for (const name of Object.keys(FOCUSFLOW_DARK_STYLES)) {
-      for (let level = 50; level <= 100; level += 5) {
-        await chrome.scripting.removeCSS({ target, css: focusFlowDarkCss(name, level) }).catch(() => {});
-      }
+
+    if (previousState) {
+      const oldStyle = previousState.style || "smart";
+      const oldIntensity = Math.max(50, Math.min(100, Number(previousState.intensity) || 90));
+      await chrome.scripting.removeCSS({
+        target, css: focusFlowDarkCss(oldStyle, oldIntensity)
+      }).catch(() => {});
     }
+
     if (enabled) {
       await chrome.scripting.insertCSS({
         target,
@@ -388,20 +392,16 @@ async function focusFlowApplyDark(tab) {
   }
 }
 
-async function focusFlowApplyDarkToOpenTabs() {
+async function focusFlowApplyDarkToOpenTabs(previousState = null) {
   const tabs = await chrome.tabs.query({});
-  for (const tab of tabs) await focusFlowApplyDark(tab);
+  for (const tab of tabs) await focusFlowApplyDark(tab, previousState);
 }
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === "complete") focusFlowApplyDark(tab);
 });
-chrome.tabs.onActivated.addListener(async ({ tabId }) => {
-  const tab = await chrome.tabs.get(tabId).catch(() => null);
-  if (tab) await focusFlowApplyDark(tab);
-});
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.darkMode) focusFlowApplyDarkToOpenTabs();
+  if (area === "local" && changes.darkMode) focusFlowApplyDarkToOpenTabs(changes.darkMode.oldValue || null);
 });
-chrome.runtime.onStartup.addListener(focusFlowApplyDarkToOpenTabs);
-chrome.runtime.onInstalled.addListener(focusFlowApplyDarkToOpenTabs);
+chrome.runtime.onStartup.addListener(() => focusFlowApplyDarkToOpenTabs());
+chrome.runtime.onInstalled.addListener(() => focusFlowApplyDarkToOpenTabs());
