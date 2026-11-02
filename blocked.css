@@ -1,5 +1,4 @@
 /* ===== CODER IITM — blocked.css ===== */
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@700;900&display=swap');
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -123,7 +122,6 @@ canvas#matrix {
 }
 
 /* Minimal FocusFlow blocked-page treatment */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 body { background:#0b0e0c; color:#edf3ed; font-family:Inter,ui-sans-serif,system-ui,sans-serif; }
 canvas#matrix { opacity:.07; }
 .warning-box {
