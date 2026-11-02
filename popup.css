@@ -879,3 +879,20 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
+
+/* Quick access tools */
+.header-actions { display: flex; align-items: center; gap: 8px; }
+.quick-dark-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--border2); border-radius: 999px;
+  padding: 6px 10px; background: var(--bg2); color: var(--text2);
+  font: 650 10px var(--font); cursor: pointer; white-space: nowrap;
+}
+.quick-dark-btn:hover { border-color: var(--accent); color: var(--text); }
+.quick-dark-btn.is-on {
+  background: var(--accent-dim); color: var(--accent);
+  border-color: var(--accent);
+}
+.tool-status { color: var(--text3); font-size: 10px; line-height: 1.5; }
+.dark-style-btns { flex-wrap: wrap; }
+.dark-style-btn { min-width: 56px; }
