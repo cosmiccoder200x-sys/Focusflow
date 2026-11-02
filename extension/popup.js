@@ -1284,7 +1284,7 @@ document.getElementById("exportCsvBtn").addEventListener("click", async () => {
 });
 
 document.getElementById("exportDataBtn").addEventListener("click", async () => {
-  const keys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","achievements","dsaProgress","siteProfiles","darkMode"];
+  const keys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","achievements","dsaProgress","siteProfiles","darkMode","smartFocusState","smartFocusHistory"];
   const r = await chrome.storage.local.get(keys);
   const payload = { meta: { app: "focusflow", version: "4.0", exportedAt: new Date().toISOString() }, ...r };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -1315,7 +1315,7 @@ document.querySelectorAll(".theme-btn").forEach(btn => {
 
 // Backup
 document.getElementById("backupBtn").addEventListener("click", async () => {
-  const keys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","siteProfiles","darkMode"];
+  const keys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","siteProfiles","darkMode","smartFocusState","smartFocusHistory"];
   const r = await chrome.storage.local.get(keys);
   const payload = { meta: { app: "focusflow", version: "4.0", exportedAt: new Date().toISOString(), schemaVersion: 2 }, ...r };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -1345,7 +1345,7 @@ document.getElementById("restoreInput").addEventListener("change", async (e) => 
   if (!payload.meta || payload.meta.app !== "focusflow") { alert("Not a valid FocusFlow backup."); return; }
 
   const toSet = {};
-  const allowedKeys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","achievements","dsaProgress","weeklyReports","siteProfiles","darkMode"];
+  const allowedKeys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","achievements","dsaProgress","weeklyReports","siteProfiles","darkMode","smartFocusState","smartFocusHistory"];
   allowedKeys.forEach(k => { if (payload[k] !== undefined) toSet[k] = payload[k]; });
   await chrome.storage.local.set(toSet);
   alert("Data restored successfully! Please reload the extension.");
@@ -1355,7 +1355,7 @@ document.getElementById("restoreInput").addEventListener("change", async (e) => 
 // Reset stats
 document.getElementById("resetStatsBtn").addEventListener("click", async () => {
   if (!confirm("Reset all tracking statistics? This cannot be undone.")) return;
-  await chrome.storage.local.remove(["timeData","dailyPomoCount","pomoHistory","achievements"]);
+  await chrome.storage.local.remove(["timeData","dailyPomoCount","pomoHistory","achievements","smartFocusHistory"]);
   alert("Statistics reset.");
 });
 
