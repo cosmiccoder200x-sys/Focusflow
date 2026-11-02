@@ -18,6 +18,7 @@ function activateFeatureTab(btn) {
   if (btn.dataset.tab === "score") renderScore();
   if (btn.dataset.tab === "code") renderCodingDashboard();
   if (btn.dataset.tab === "report") renderReport();
+  if (btn.dataset.tab === "smartinsights") renderSmartInsights();
   if (btn.dataset.tab === "goals") renderDailyGoals();
 }
 
@@ -1305,6 +1306,116 @@ function drawCodingGraph(days) {
     ctx.fillStyle = cssVar("--text3") || "#5e5a52"; ctx.font = `8px monospace`; ctx.textAlign = "center";
     ctx.fillText(d.label, x + barW/2, H - 4);
   });
+}
+
+
+/* =============================================
+   SMART INSIGHTS — LOCAL, RULE-BASED ANALYSIS
+   ============================================= */
+function insightNode(tag, className, value) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (value !== undefined) node.textContent = value;
+  return node;
+}
+function insightCard(title, value, detail) {
+  const card = insightNode("article", "insight-card");
+  card.append(insightNode("span","insight-card-label",title),
+    insightNode("strong","insight-card-value",value),
+    insightNode("span","insight-card-detail",detail));
+  return card;
+}
+async function renderSmartInsights() {
+  const root = document.getElementById("smartInsightsContent");
+  if (!root) return;
+  const data = await chrome.storage.local.get(["timeData","siteCategories","smartFocusHistory"]);
+  const timeData = data.timeData || {};
+  const categories = data.siteCategories || {};
+  const sessions = Array.isArray(data.smartFocusHistory) ? data.smartFocusHistory : [];
+  const sumDays = (start,end) => {
+    let study=0, distraction=0, total=0, sites={};
+    for(let i=start;i<end;i++){
+      Object.entries(timeData[getDateKey(i)]||{}).forEach(([domain,raw])=>{
+        const seconds=Math.max(0,Number(raw)||0); total+=seconds;
+        sites[domain]=(sites[domain]||0)+seconds;
+        if((categories[domain]||"waste")==="study")study+=seconds;else distraction+=seconds;
+      });
+    }
+    return {study,distraction,total,sites};
+  };
+  const recent=sumDays(0,7), previous=sumDays(7,14);
+  const changePct=previous.study>0?Math.round((recent.study-previous.study)/previous.study*100):null;
+  const focusShare=recent.total?Math.round(recent.study/recent.total*100):0;
+  const topDistractions=Object.entries(recent.sites)
+    .filter(([domain])=>(categories[domain]||"waste")!=="study")
+    .sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const cutoff=Date.now()-7*86400000;
+  const weekSessions=sessions.filter(s=>Number(s.endedAt||0)>=cutoff);
+  const completed=weekSessions.filter(s=>s.status==="completed").length;
+  const sessionRate=weekSessions.length?Math.round(completed/weekSessions.length*100):null;
+  const avgSession=weekSessions.length?Math.round(weekSessions.reduce((n,s)=>n+Math.max(0,Number(s.actualFocusSec)||0),0)/weekSessions.length/60):0;
+  let bestDay=null;
+  for(let i=0;i<7;i++){
+    const key=getDateKey(i);let study=0;
+    Object.entries(timeData[key]||{}).forEach(([domain,seconds])=>{
+      if((categories[domain]||"waste")==="study")study+=Math.max(0,Number(seconds)||0);
+    });
+    if(!bestDay||study>bestDay.study)bestDay={key,study};
+  }
+  const bestLabel=bestDay?.study?(bestDay.key===getTodayKey()?"Today":new Date(bestDay.key+"T12:00:00").toLocaleDateString([],{weekday:"long"})):"Not enough data";
+  const metrics=document.createElement("div");metrics.className="insight-metric-grid";
+  metrics.append(
+    insightCard("Study time · 7 days",fmtSec(recent.study),"Across sites marked Study"),
+    insightCard("Focus share",recent.total?focusShare+"%":"—","Study time as a share of tracked browsing"),
+    insightCard("Study-time trend",changePct===null?"Building baseline":(changePct>0?"+":"")+changePct+"%","Compared with the previous 7 days"),
+    insightCard("Best study day",bestLabel,bestDay?.study?fmtSec(bestDay.study)+" of study time":"Start tracking to find your pattern")
+  );
+  const suggestions=[];
+  if(!recent.total)suggestions.push("Browse as usual for a few days. FocusFlow needs tracked activity before it can spot useful patterns.");
+  else{
+    if(focusShare<35)suggestions.push("Try one 25-minute Smart Focus session with only the sites needed for your current task allowed.");
+    else if(focusShare<65)suggestions.push("Protect one distraction-free block to increase focused time while keeping your routine balanced.");
+    else suggestions.push("Your tracked time is mostly on Study sites. Keep the routine sustainable with planned breaks.");
+    if(topDistractions[0]&&topDistractions[0][1]>=1800)suggestions.push("Consider adding "+topDistractions[0][0]+" to a Smart Focus block list during your next study session.");
+    if(changePct!==null&&changePct< -15)suggestions.push("Study time is down from the previous week. Set a smaller target and rebuild consistency.");
+    else if(changePct!==null&&changePct>15)suggestions.push("Study time is trending upward. Keep the schedule repeatable rather than increasing it too quickly.");
+    if(!weekSessions.length)suggestions.push("Try a Smart Focus session this week so you can compare planned and completed focus time.");
+    else if(sessionRate<50)suggestions.push("Many recent Smart Focus sessions ended early. Shorten the planned duration or make the allow list more practical.");
+  }
+  const suggestionPanel=insightNode("section","insight-panel-card");
+  suggestionPanel.appendChild(insightNode("h3","insight-panel-title","Suggestions to try"));
+  const list=insightNode("ul","insight-recommendations");
+  suggestions.slice(0,4).forEach(s=>list.appendChild(insightNode("li","",s)));
+  suggestionPanel.appendChild(list);
+
+  const distractionPanel=insightNode("section","insight-panel-card");
+  distractionPanel.appendChild(insightNode("h3","insight-panel-title","Top distractions · 7 days"));
+  if(!topDistractions.length)distractionPanel.appendChild(insightNode("p","insight-muted","No non-study browsing time recorded yet."));
+  else{
+    const rows=insightNode("div","insight-domain-list");
+    topDistractions.forEach(([domain,seconds])=>{
+      const row=insightNode("div","insight-domain-row");
+      row.append(insightNode("span","insight-domain-name",domain),insightNode("strong","",fmtSec(seconds)));
+      rows.appendChild(row);
+    });
+    distractionPanel.appendChild(rows);
+  }
+  const sessionPanel=insightNode("section","insight-panel-card");
+  sessionPanel.appendChild(insightNode("h3","insight-panel-title","Smart Focus · 7 days"));
+  const sessionGrid=insightNode("div","insight-session-grid");
+  [["Sessions",String(weekSessions.length)],["Completed",String(completed)],
+   ["Completion rate",sessionRate===null?"—":sessionRate+"%"],
+   ["Average focused",weekSessions.length?avgSession+" min":"—"]].forEach(([label,value])=>{
+    const item=insightNode("div","insight-session-stat");
+    item.append(insightNode("span","",label),insightNode("strong","",value));sessionGrid.appendChild(item);
+  });
+  sessionPanel.appendChild(sessionGrid);
+  const comparePanel=insightNode("section","insight-panel-card");
+  comparePanel.appendChild(insightNode("h3","insight-panel-title","Study time · week over week"));
+  comparePanel.appendChild(insightNode("p","insight-muted",changePct===null?
+    "A comparison will appear after you have activity across two weeks.":
+    "You logged "+fmtSec(recent.study)+" this week and "+fmtSec(previous.study)+" last week."));
+  root.replaceChildren(metrics,suggestionPanel,distractionPanel,sessionPanel,comparePanel);
 }
 
 // =============================================
