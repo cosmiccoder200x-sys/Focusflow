@@ -339,6 +339,8 @@ async function renderTrack(liveData) {
   });
   const totalSec = studySec + wasteSec;
   document.getElementById("totalUsage").textContent = "⏱ " + fmtSec(totalSec);
+  const homeUsage = document.getElementById("homeTotalUsage");
+  if (homeUsage) homeUsage.textContent = fmtSec(totalSec);
   drawChart(studySec, wasteSec, totalSec);
   await drawDayGraph(liveData);
   renderSiteList(dayData, cats, liveData);
