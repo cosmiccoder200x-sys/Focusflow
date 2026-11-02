@@ -264,7 +264,26 @@
       color: #aaa;
     }
   </style>
-</head>
+
+<style>
+  :root { color-scheme: dark; --surface:#111612; --border:#29352b; --accent:#b7f56a; }
+  body { background:#0b0e0c; color:#edf3ed; font-family:Inter,ui-sans-serif,system-ui,sans-serif; }
+  .container { max-width:640px; background:#111612; border:1px solid #202a22; border-radius:16px; box-shadow:0 16px 48px rgba(0,0,0,.25); }
+  h1 { color:#edf3ed; letter-spacing:-.04em; }
+  .subtitle { color:#91a092; }
+  label { color:#a3b0a5; letter-spacing:.08em; }
+  input[type="text"], input[type="password"] { background:#0b0e0c; border:1px solid #29352b; border-radius:9px; color:#edf3ed; }
+  input[type="text"]:focus, input[type="password"]:focus { border-color:#b7f56a; }
+  .btn-primary { background:#b7f56a; color:#14200d; }
+  .btn-primary:hover { background:#cafa91; }
+  .btn-secondary { background:#171e19; border:1px solid #29352b; color:#c7d2c8; }
+  .btn-secondary:hover { background:#202a22; }
+  .status.success { background:#172217; border-color:#344b2b; color:#b7f56a; }
+  .status.error { background:#281717; border-color:#583030; }
+  .status.info { background:#141e29; border-color:#2b4058; }
+  .sync-info { border-color:#29352b; }
+  .security-note { background:#171e19; border-color:#29352b; color:#a3b0a5; }
+</style>\n</head>
 <body>
   <div class="container">
     <h1>🔗 RangOS Sync Settings</h1>
