@@ -45,6 +45,7 @@
   </div>
   <div class="nav-group" data-group="tools" hidden>
     <button class="tab-btn" data-tab="block">Block</button>
+    <button class="tab-btn" data-tab="profiles">Profiles</button>
     <button class="tab-btn" data-tab="speed">Speed</button>
     <button class="tab-btn" data-tab="dark">Dark mode</button>
   </div>
@@ -71,6 +72,42 @@
   </div>
   <div class="home-footnote"><span class="home-orbit-dot"></span> Stay intentional. The rest can wait.</div>
   <div class="home-legacy-data" aria-hidden="true"><select id="datePicker" class="picker"></select><canvas id="chart" width="362" height="130"></canvas><canvas id="dayGraph" width="362" height="100"></canvas><div id="siteList" class="site-list"></div></div>
+</section>
+
+<!-- ===== WEBSITE PROFILES TAB ===== -->
+<section class="tab-content" id="tab-profiles">
+  <p class="section-title">Website Profiles</p>
+  <p class="profile-intro">Set automatic playback speed and daily time limits for individual websites. Existing dark-mode overrides are managed here too.</p>
+  <div class="profile-form">
+    <label for="profileDomain">Website domain</label>
+    <div class="profile-domain-row">
+      <input id="profileDomain" class="text-input" type="text" placeholder="youtube.com" autocomplete="off" spellcheck="false" />
+      <button id="profileUseCurrent" class="btn btn-ghost" type="button">Use current</button>
+    </div>
+    <label class="profile-check-row"><input id="profileEnabled" type="checkbox" checked /> Enable automatic profile rules</label>
+    <div class="profile-field-grid">
+      <div><label for="profileSpeed">Playback speed</label>
+        <select id="profileSpeed" class="text-input">
+          <option value="1">1× (Normal)</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option>
+          <option value="1.75">1.75×</option><option value="2">2×</option><option value="2.5">2.5×</option>
+          <option value="3">3×</option><option value="4">4×</option><option value="0.75">0.75×</option><option value="0.5">0.5×</option>
+        </select>
+      </div>
+      <div><label for="profileLimit">Daily time limit (minutes)</label>
+        <input id="profileLimit" class="text-input" type="number" min="0" max="1440" step="5" value="0" />
+      </div>
+    </div>
+    <div><label for="profileDarkMode">Website dark mode</label>
+      <select id="profileDarkMode" class="text-input">
+        <option value="inherit">Use global setting</option><option value="on">Always on</option><option value="off">Always off</option>
+      </select>
+    </div>
+    <p class="profile-help">Set the daily limit to 0 for no limit. Time limits use FocusFlow's existing screen-time tracking. A site is redirected to the blocked page when its limit is reached.</p>
+    <button id="profileSave" class="btn btn-primary profile-save" type="button">Save website profile</button>
+    <div id="profileStatus" class="profile-status" role="status" aria-live="polite"></div>
+  </div>
+  <div class="profile-list-heading"><span>Saved profiles</span><span id="profileCount">0</span></div>
+  <div id="profileList" class="profile-list"><div class="empty-state">No website profiles yet.</div></div>
 </section>
 
 <!-- ===== BLOCK TAB ===== -->
@@ -375,5 +412,6 @@
 </section>
 
 <script src="popup.js"></script>
+<script src="profiles.js"></script>
 </body>
 </html>

@@ -1284,7 +1284,7 @@ document.getElementById("exportCsvBtn").addEventListener("click", async () => {
 });
 
 document.getElementById("exportDataBtn").addEventListener("click", async () => {
-  const keys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","achievements","dsaProgress"];
+  const keys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","achievements","dsaProgress","siteProfiles","darkMode"];
   const r = await chrome.storage.local.get(keys);
   const payload = { meta: { app: "focusflow", version: "4.0", exportedAt: new Date().toISOString() }, ...r };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -1315,7 +1315,7 @@ document.querySelectorAll(".theme-btn").forEach(btn => {
 
 // Backup
 document.getElementById("backupBtn").addEventListener("click", async () => {
-  const keys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount"];
+  const keys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","siteProfiles","darkMode"];
   const r = await chrome.storage.local.get(keys);
   const payload = { meta: { app: "focusflow", version: "4.0", exportedAt: new Date().toISOString(), schemaVersion: 2 }, ...r };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -1345,7 +1345,7 @@ document.getElementById("restoreInput").addEventListener("change", async (e) => 
   if (!payload.meta || payload.meta.app !== "focusflow") { alert("Not a valid FocusFlow backup."); return; }
 
   const toSet = {};
-  const allowedKeys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","achievements","dsaProgress","weeklyReports"];
+  const allowedKeys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","achievements","dsaProgress","weeklyReports","siteProfiles","darkMode"];
   allowedKeys.forEach(k => { if (payload[k] !== undefined) toSet[k] = payload[k]; });
   await chrome.storage.local.set(toSet);
   alert("Data restored successfully! Please reload the extension.");
