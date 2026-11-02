@@ -346,3 +346,62 @@ chrome.storage.onChanged.addListener(async (changes, area) => {
     // Task blocking handled via SET_BLOCKED_SITES messages
   }
 });
+
+
+/* ===== Persistent per-site dark mode ===== */
+const FOCUSFLOW_DARK_STYLES = {
+  smart: (i) => `html { color-scheme: dark !important; background: #101216 !important; filter: invert(${i}%) hue-rotate(180deg) !important; } img, video, canvas, iframe, svg, picture, [style*="background-image"] { filter: invert(100%) hue-rotate(180deg) !important; }`,
+  invert: (i) => `html { filter: invert(${i}%) hue-rotate(180deg) !important; } img, video, canvas, iframe, svg, picture, [style*="background-image"] { filter: invert(100%) hue-rotate(180deg) !important; }`,
+  dim: (i) => `html { background: #101216 !important; filter: brightness(${Math.max(35, 100 - Math.round(i * 0.45))}%) !important; color-scheme: dark !important; }`,
+  grayscale: (i) => `html { filter: grayscale(100%) invert(${i}%) hue-rotate(180deg) !important; } img, video, canvas, iframe, svg, picture { filter: invert(100%) hue-rotate(180deg) !important; }`
+};
+
+function focusFlowDarkCss(style, intensity) {
+  return (FOCUSFLOW_DARK_STYLES[style] || FOCUSFLOW_DARK_STYLES.smart)(intensity);
+}
+
+function focusFlowSupportedTab(tab) {
+  return Boolean(tab?.id && tab.url && !/^(chrome|edge|about|chrome-extension):/.test(tab.url));
+}
+
+async function focusFlowApplyDark(tab, previousState = null) {
+  if (!focusFlowSupportedTab(tab)) return;
+  try {
+    const saved = await chrome.storage.local.get("darkMode");
+    const state = saved.darkMode || { global: false, style: "smart", intensity: 90, sites: {} };
+    const domain = new URL(tab.url).hostname.replace(/^www\./, "");
+    const enabled = state.sites?.[domain] !== undefined ? state.sites[domain] : Boolean(state.global);
+    const target = { tabId: tab.id };
+
+    if (previousState) {
+      const oldStyle = previousState.style || "smart";
+      const oldIntensity = Math.max(50, Math.min(100, Number(previousState.intensity) || 90));
+      await chrome.scripting.removeCSS({
+        target, css: focusFlowDarkCss(oldStyle, oldIntensity)
+      }).catch(() => {});
+    }
+
+    if (enabled) {
+      await chrome.scripting.insertCSS({
+        target,
+        css: focusFlowDarkCss(state.style || "smart", Math.max(50, Math.min(100, Number(state.intensity) || 90)))
+      });
+    }
+  } catch (error) {
+    // Chrome internal pages and restricted pages cannot accept injected CSS.
+  }
+}
+
+async function focusFlowApplyDarkToOpenTabs(previousState = null) {
+  const tabs = await chrome.tabs.query({});
+  for (const tab of tabs) await focusFlowApplyDark(tab, previousState);
+}
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === "complete") focusFlowApplyDark(tab);
+});
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.darkMode) focusFlowApplyDarkToOpenTabs(changes.darkMode.oldValue || null);
+});
+chrome.runtime.onStartup.addListener(() => focusFlowApplyDarkToOpenTabs());
+chrome.runtime.onInstalled.addListener(() => focusFlowApplyDarkToOpenTabs());
