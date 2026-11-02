@@ -40,6 +40,7 @@
   </div>
   <div class="nav-group" data-group="focus" hidden>
     <button class="tab-btn" data-tab="smartfocus">Smart Focus</button>
+    <button class="tab-btn" data-tab="goals">Daily Goals</button>
     <button class="tab-btn" data-tab="pomo">Timer</button>
     <button class="tab-btn" data-tab="tasks">Tasks</button>
     <button class="tab-btn" data-tab="notes">Notes</button>
@@ -177,6 +178,38 @@
   </div>
   <div class="sf-history-head"><span>RECENT FOCUS SESSIONS</span><span id="sfHistoryCount">0</span></div>
   <div id="sfHistory" class="sf-history"><div class="empty-state">Your completed sessions will appear here.</div></div>
+</section>
+
+<!-- ===== DAILY GOALS TAB ===== -->
+<section class="tab-content" id="tab-goals">
+  <p class="section-title">Daily Goals</p>
+  <p class="goals-intro">Set a realistic target, track today's progress, and build a streak through consistency.</p>
+  <div class="goals-progress-grid">
+    <article class="goal-progress-card">
+      <div class="goal-ring" id="goalFocusRing" role="img" aria-label="Focus time goal progress"><div class="goal-ring-center"><strong id="goalFocusValue">0%</strong><span>FOCUS</span></div></div>
+      <div class="goal-card-copy"><strong id="goalFocusAmount">0 / 120 min</strong><span>Study time tracked</span></div>
+    </article>
+    <article class="goal-progress-card">
+      <div class="goal-ring" id="goalTasksRing" role="img" aria-label="Daily tasks goal progress"><div class="goal-ring-center"><strong id="goalTasksValue">0%</strong><span>TASKS</span></div></div>
+      <div class="goal-card-copy"><strong id="goalTasksAmount">0 / 3 done</strong><span>Tasks completed today</span></div>
+    </article>
+  </div>
+  <div class="goal-streak-grid">
+    <div class="goal-streak-card"><strong id="goalCurrentStreak">0</strong><span>Current streak</span></div>
+    <div class="goal-streak-card"><strong id="goalBestStreak">0</strong><span>Best streak</span></div>
+    <div class="goal-streak-card"><strong id="goalDaysMet">0</strong><span>Days completed</span></div>
+  </div>
+  <div class="goal-week-card"><div class="goal-week-heading"><strong>This week</strong><span>Daily goal completion</span></div><div id="goalWeekStrip" class="goal-week-strip"></div></div>
+  <div class="goal-settings-card">
+    <div class="goal-settings-heading"><strong>Daily targets</strong><span>Change these any time</span></div>
+    <div class="goal-settings-fields">
+      <label>Focus time <span><input id="goalFocusTarget" type="number" min="15" max="720" step="15" value="120" /> min / day</span></label>
+      <label>Tasks completed <span><input id="goalTasksTarget" type="number" min="1" max="30" step="1" value="3" /> / day</span></label>
+    </div>
+    <button id="dailyGoalSave" class="btn btn-primary" type="button">Save daily targets</button>
+    <p id="dailyGoalStatus" class="goal-status" role="status" aria-live="polite"></p>
+    <p class="goal-note">Focus time is calculated from websites you classify as Study in Overview. Task progress counts tasks you mark complete from now on; older completions are not backfilled.</p>
+  </div>
 </section>
 
 <!-- ===== POMO TAB ===== -->
