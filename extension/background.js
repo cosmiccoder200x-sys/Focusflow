@@ -188,7 +188,7 @@ chrome.tabs.onActivated.addListener(({ tabId }) => handleTabFocus(tabId));
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status !== "complete") return;
   const domain = getDomain(tab.url);
-  if (isBlocked(domain)) {
+  if (await isBlocked(domain)) {
     chrome.tabs.update(tabId, { url: chrome.runtime.getURL("blocked.html") });
     await stopTracking(); return;
   }
