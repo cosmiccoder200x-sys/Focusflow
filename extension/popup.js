@@ -703,15 +703,13 @@ async function recordDailyTaskCompletion(task) {
   }
 }
 
-function getDailyFocusSeconds(dateKey, timeData, categories, activeTracking) {
+function getDailyFocusSeconds(dateKey, timeData, categories) {
+  // The background tracker flushes active-tab seconds into timeData every second.
+  // Read the persisted total only; adding activeTracking elapsed time would double-count it.
   let total = 0;
   Object.entries(timeData[dateKey] || {}).forEach(([domain, seconds]) => {
     if ((categories[domain] || "waste") === "study") total += Math.max(0, Number(seconds) || 0);
   });
-  if (dateKey === getTodayKey() && activeTracking?.domain &&
-      (categories[activeTracking.domain] || "waste") === "study") {
-    total += Math.max(0, (Date.now() - Number(activeTracking.start || Date.now())) / 1000);
-  }
   return total;
 }
 
@@ -725,14 +723,14 @@ function isDailyGoalMet(dateKey, focusTargetSec, taskTarget, timeData, categorie
 }
 
 async function renderDailyGoals() {
-  const result = await chrome.storage.local.get(["dailyGoalSettings","dailyTaskCompletions","timeData","siteCategories","activeTracking"]);
+  const result = await chrome.storage.local.get(["dailyGoalSettings","dailyTaskCompletions","timeData","siteCategories"]);
   const settings = { ...DEFAULT_DAILY_GOALS, ...(result.dailyGoalSettings || {}) };
   const completions = result.dailyTaskCompletions || {};
   const timeData = result.timeData || {};
   const categories = result.siteCategories || {};
   const focusTargetSec = settings.focusMinutes * 60;
   const today = getTodayKey();
-  const focusSec = getDailyFocusSeconds(today, timeData, categories, result.activeTracking);
+  const focusSec = getDailyFocusSeconds(today, timeData, categories);
   const taskCount = getDailyTaskCount(today, completions);
   const focusPct = Math.min(100, Math.round(focusSec / Math.max(1, focusTargetSec) * 100));
   const taskPct = Math.min(100, Math.round(taskCount / Math.max(1, settings.tasks) * 100));
@@ -768,7 +766,7 @@ async function renderDailyGoals() {
   strip.replaceChildren();
   for (let i = 6; i >= 0; i--) {
     const key = getDateKey(i);
-    const focus = getDailyFocusSeconds(key, timeData, categories, i === 0 ? result.activeTracking : null);
+    const focus = getDailyFocusSeconds(key, timeData, categories);
     const tasks = getDailyTaskCount(key, completions);
     const met = focus >= focusTargetSec && tasks >= settings.tasks;
     const day = document.createElement("div");
@@ -801,7 +799,7 @@ document.getElementById("dailyGoalSave").addEventListener("click", async () => {
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "local") return;
   if (changes.timeData || changes.siteCategories || changes.dailyTaskCompletions ||
-      changes.dailyGoalSettings || changes.activeTracking) {
+      changes.dailyGoalSettings) {
     if (document.getElementById("tab-goals")?.classList.contains("active")) renderDailyGoals();
   }
 });
