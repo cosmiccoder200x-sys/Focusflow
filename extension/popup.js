@@ -18,6 +18,7 @@ function activateFeatureTab(btn) {
   if (btn.dataset.tab === "score") renderScore();
   if (btn.dataset.tab === "code") renderCodingDashboard();
   if (btn.dataset.tab === "report") renderReport();
+  if (btn.dataset.tab === "goals") renderDailyGoals();
 }
 
 document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -658,8 +659,11 @@ async function renderTaskList() {
   listEl.querySelectorAll(".task-check-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
       const idx = parseInt(btn.dataset.idx), tasks = await loadTasks();
-      tasks[idx].done = !tasks[idx].done; await saveTasks(tasks);
+      tasks[idx].done = !tasks[idx].done;
+      if (tasks[idx].done) await recordDailyTaskCompletion(tasks[idx]);
+      await saveTasks(tasks);
       await renderTaskList(); await syncTaskBlocking();
+      await renderDailyGoals();
     });
   });
   listEl.querySelectorAll(".task-del-btn").forEach(btn => {
@@ -680,6 +684,129 @@ document.getElementById("addTaskBtn").addEventListener("click", async () => {
 });
 document.getElementById("taskInput").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("addTaskBtn").click(); });
 renderTaskList();
+
+
+/* =============================================
+   DAILY GOALS — DAILY TARGETS + STREAKS
+   ============================================= */
+const DEFAULT_DAILY_GOALS = { focusMinutes: 120, tasks: 3 };
+
+async function recordDailyTaskCompletion(task) {
+  const result = await chrome.storage.local.get("dailyTaskCompletions");
+  const completions = result.dailyTaskCompletions || {};
+  const today = getTodayKey();
+  if (!Array.isArray(completions[today])) completions[today] = [];
+  const taskKey = String(task.id ?? task.text ?? "task");
+  if (!completions[today].includes(taskKey)) {
+    completions[today].push(taskKey);
+    await chrome.storage.local.set({ dailyTaskCompletions: completions });
+  }
+}
+
+function getDailyFocusSeconds(dateKey, timeData, categories) {
+  // The background tracker flushes active-tab seconds into timeData every second.
+  // Read the persisted total only; adding activeTracking elapsed time would double-count it.
+  let total = 0;
+  Object.entries(timeData[dateKey] || {}).forEach(([domain, seconds]) => {
+    if ((categories[domain] || "waste") === "study") total += Math.max(0, Number(seconds) || 0);
+  });
+  return total;
+}
+
+function getDailyTaskCount(dateKey, completions) {
+  return Array.isArray(completions[dateKey]) ? new Set(completions[dateKey].map(String)).size : 0;
+}
+
+function isDailyGoalMet(dateKey, focusTargetSec, taskTarget, timeData, categories, completions) {
+  return getDailyFocusSeconds(dateKey, timeData, categories, null) >= focusTargetSec &&
+    getDailyTaskCount(dateKey, completions) >= taskTarget;
+}
+
+async function renderDailyGoals() {
+  const result = await chrome.storage.local.get(["dailyGoalSettings","dailyTaskCompletions","timeData","siteCategories"]);
+  const settings = { ...DEFAULT_DAILY_GOALS, ...(result.dailyGoalSettings || {}) };
+  const completions = result.dailyTaskCompletions || {};
+  const timeData = result.timeData || {};
+  const categories = result.siteCategories || {};
+  const focusTargetSec = settings.focusMinutes * 60;
+  const today = getTodayKey();
+  const focusSec = getDailyFocusSeconds(today, timeData, categories);
+  const taskCount = getDailyTaskCount(today, completions);
+  const focusPct = Math.min(100, Math.round(focusSec / Math.max(1, focusTargetSec) * 100));
+  const taskPct = Math.min(100, Math.round(taskCount / Math.max(1, settings.tasks) * 100));
+  const updateRing = (id, pct) => {
+    const ring = document.getElementById(id);
+    if (ring) ring.style.background = `conic-gradient(var(--accent) ${pct}%, rgba(255,255,255,.075) 0)`;
+  };
+  updateRing("goalFocusRing", focusPct);
+  updateRing("goalTasksRing", taskPct);
+  document.getElementById("goalFocusValue").textContent = focusPct + "%";
+  document.getElementById("goalTasksValue").textContent = taskPct + "%";
+  document.getElementById("goalFocusAmount").textContent = `${Math.floor(focusSec / 60)} / ${settings.focusMinutes} min`;
+  document.getElementById("goalTasksAmount").textContent = `${taskCount} / ${settings.tasks} done`;
+  document.getElementById("goalFocusTarget").value = settings.focusMinutes;
+  document.getElementById("goalTasksTarget").value = settings.tasks;
+
+  let bestStreak = 0, runningStreak = 0, daysMet = 0;
+  for (let i = 364; i >= 0; i--) {
+    if (isDailyGoalMet(getDateKey(i), focusTargetSec, settings.tasks, timeData, categories, completions)) {
+      daysMet++; runningStreak++; bestStreak = Math.max(bestStreak, runningStreak);
+    } else runningStreak = 0;
+  }
+  let currentStreak = 0;
+  for (let i = 0; i < 365; i++) {
+    if (isDailyGoalMet(getDateKey(i), focusTargetSec, settings.tasks, timeData, categories, completions)) currentStreak++;
+    else if (i !== 0) break;
+  }
+  document.getElementById("goalCurrentStreak").textContent = currentStreak;
+  document.getElementById("goalBestStreak").textContent = bestStreak;
+  document.getElementById("goalDaysMet").textContent = daysMet;
+
+  const strip = document.getElementById("goalWeekStrip");
+  strip.replaceChildren();
+  for (let i = 6; i >= 0; i--) {
+    const key = getDateKey(i);
+    const focus = getDailyFocusSeconds(key, timeData, categories);
+    const tasks = getDailyTaskCount(key, completions);
+    const met = focus >= focusTargetSec && tasks >= settings.tasks;
+    const day = document.createElement("div");
+    day.className = "goal-week-day" + (met ? " is-complete" : "");
+    const label = document.createElement("span");
+    label.textContent = i === 0 ? "Today" : new Date(key + "T12:00:00").toLocaleDateString([], { weekday: "short" });
+    const dot = document.createElement("i");
+    dot.setAttribute("aria-label", met ? "Goal completed" : "Goal not completed");
+    const value = document.createElement("small");
+    value.textContent = met ? "Done" : Math.min(100, Math.round(Math.min(focus / focusTargetSec, tasks / settings.tasks) * 100)) + "%";
+    day.append(label, dot, value);
+    strip.appendChild(day);
+  }
+}
+
+document.getElementById("dailyGoalSave").addEventListener("click", async () => {
+  const focusMinutes = Number(document.getElementById("goalFocusTarget").value);
+  const tasks = Number(document.getElementById("goalTasksTarget").value);
+  const status = document.getElementById("dailyGoalStatus");
+  if (!Number.isInteger(focusMinutes) || focusMinutes < 15 || focusMinutes > 720 ||
+      !Number.isInteger(tasks) || tasks < 1 || tasks > 30) {
+    status.textContent = "Choose 15–720 focus minutes and 1–30 tasks.";
+    return;
+  }
+  await chrome.storage.local.set({ dailyGoalSettings: { focusMinutes, tasks } });
+  status.textContent = "Daily targets saved.";
+  await renderDailyGoals();
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local") return;
+  if (changes.timeData || changes.siteCategories || changes.dailyTaskCompletions ||
+      changes.dailyGoalSettings) {
+    if (document.getElementById("tab-goals")?.classList.contains("active")) renderDailyGoals();
+  }
+});
+
+chrome.storage.local.get("dailyGoalSettings").then(result => {
+  if (!result.dailyGoalSettings) chrome.storage.local.set({ dailyGoalSettings: DEFAULT_DAILY_GOALS });
+});
 
 // =============================================
 // STATS TAB — GITHUB-STYLE HEATMAP
@@ -1284,7 +1411,7 @@ document.getElementById("exportCsvBtn").addEventListener("click", async () => {
 });
 
 document.getElementById("exportDataBtn").addEventListener("click", async () => {
-  const keys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","achievements","dsaProgress","siteProfiles","darkMode","smartFocusState","smartFocusHistory"];
+  const keys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","achievements","dsaProgress","siteProfiles","darkMode","smartFocusState","smartFocusHistory","dailyGoalSettings","dailyTaskCompletions"];
   const r = await chrome.storage.local.get(keys);
   const payload = { meta: { app: "focusflow", version: "4.0", exportedAt: new Date().toISOString() }, ...r };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -1315,7 +1442,7 @@ document.querySelectorAll(".theme-btn").forEach(btn => {
 
 // Backup
 document.getElementById("backupBtn").addEventListener("click", async () => {
-  const keys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","siteProfiles","darkMode","smartFocusState","smartFocusHistory"];
+  const keys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","siteProfiles","darkMode","smartFocusState","smartFocusHistory","dailyGoalSettings","dailyTaskCompletions"];
   const r = await chrome.storage.local.get(keys);
   const payload = { meta: { app: "focusflow", version: "4.0", exportedAt: new Date().toISOString(), schemaVersion: 2 }, ...r };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -1345,7 +1472,7 @@ document.getElementById("restoreInput").addEventListener("change", async (e) => 
   if (!payload.meta || payload.meta.app !== "focusflow") { alert("Not a valid FocusFlow backup."); return; }
 
   const toSet = {};
-  const allowedKeys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","achievements","dsaProgress","weeklyReports","siteProfiles","darkMode","smartFocusState","smartFocusHistory"];
+  const allowedKeys = ["timeData","siteCategories","blockedSites","tasks","quickNotes","pomoHistory","pomoState","dailyPomoCount","achievements","dsaProgress","weeklyReports","siteProfiles","darkMode","smartFocusState","smartFocusHistory","dailyGoalSettings","dailyTaskCompletions"];
   allowedKeys.forEach(k => { if (payload[k] !== undefined) toSet[k] = payload[k]; });
   await chrome.storage.local.set(toSet);
   alert("Data restored successfully! Please reload the extension.");
@@ -1355,7 +1482,7 @@ document.getElementById("restoreInput").addEventListener("change", async (e) => 
 // Reset stats
 document.getElementById("resetStatsBtn").addEventListener("click", async () => {
   if (!confirm("Reset all tracking statistics? This cannot be undone.")) return;
-  await chrome.storage.local.remove(["timeData","dailyPomoCount","pomoHistory","achievements","smartFocusHistory"]);
+  await chrome.storage.local.remove(["timeData","dailyPomoCount","pomoHistory","achievements","smartFocusHistory","dailyTaskCompletions"]);
   alert("Statistics reset.");
 });
 
