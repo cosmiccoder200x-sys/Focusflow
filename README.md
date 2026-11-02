@@ -27,7 +27,7 @@ FocusFlow brings screen-time tracking, website blocking, a Pomodoro timer, tasks
 | Workspace | What it is for |
 | --- | --- |
 | **Home** | A minimal overview of your current browsing activity and quick controls |
-| **Focus** | Smart Focus sessions, Pomodoro timer, tasks, and quick notes |
+| **Focus** | Smart Focus sessions, daily goals, Pomodoro timer, tasks, and quick notes |
 | **Tools** | Block distracting websites, adjust video speed, and enable website dark mode |
 | **Insights** | Review activity, streaks, achievements, productivity score, coding activity, and reports |
 | **Settings** | Manage preferences, export or restore data, and reset data |
@@ -111,6 +111,15 @@ The extension keeps Pomodoro session state and history in Chrome storage. A comp
 
 Smart Focus rules are additive: they do not overwrite your regular blocked-sites list or Website Profiles. The session's allow list takes priority over blocked-site rules while the session is running. Paused sessions do not apply Smart Focus rules. Session state and history are stored locally and included in JSON backup/restore.
 
+
+#### Daily Goals
+
+1. Open **Focus → Daily Goals**.
+2. Set a daily focus-time target (15–720 minutes) and a task-completion target (1–30 tasks).
+3. Select **Save daily targets**. Progress rings update as study time is tracked and tasks are completed.
+4. Review the current streak, best streak, completed-day count, and seven-day strip.
+
+Focus time is calculated from websites classified as **Study** in Overview. Task progress counts tasks marked complete after Daily Goals is installed; earlier task completions are not backfilled. Daily goal settings and task-completion history are included in JSON backup/restore. A day counts toward a streak when both targets are met.
 
 #### Tasks
 
@@ -255,10 +264,10 @@ For backend development and deployment, follow [SETUP.md](SETUP.md). Do not comm
 The next productivity upgrade is being developed separately and is intended to connect:
 
 - **Smart Focus Mode:** an initial implementation is available on this feature branch, including 25-, 50-, 90-minute and custom sessions, temporary site blocking/allow lists, pause/resume, a five-minute emergency override, and actual-time session history.
-- **Daily Goals:** daily focus-time and task targets, progress indicators, and streak history.
+- **Daily Goals:** configurable focus-time and task targets, progress rings, a seven-day view, and current/best streak tracking.
 - **Website Profiles:** an initial implementation is available on this feature branch: per-site playback speed, daily time limits, dark-mode overrides, and enable/disable controls. It still needs browser-level regression testing before release.
 
-Daily Goals remain planned. Smart Focus Mode and Website Profiles are feature-branch previews only; do not treat them as released until the pull request is reviewed, browser-tested, and merged.
+Daily Goals are available as a feature-branch preview. Smart Focus Mode and Website Profiles are feature-branch previews only; do not treat them as released until the pull request is reviewed, browser-tested, and merged.
 
 ---
 
