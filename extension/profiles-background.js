@@ -41,14 +41,22 @@
         await chrome.scripting.executeScript({
           target: { tabId: tab.id },
           func: (playbackRate) => {
+            if (window.__focusFlowProfileRate === playbackRate && window.__focusFlowProfileObserver) return;
             const apply = media => {
               if (media instanceof HTMLMediaElement) {
                 try { media.playbackRate = playbackRate; media.defaultPlaybackRate = playbackRate; } catch (_) {}
               }
             };
             document.querySelectorAll("video,audio").forEach(apply);
-            document.addEventListener("play", event => apply(event.target), true);
-            document.addEventListener("loadedmetadata", event => apply(event.target), true);
+            if (window.__focusFlowProfileHandlers) {
+              document.removeEventListener("play", window.__focusFlowProfileHandlers.onPlay, true);
+              document.removeEventListener("loadedmetadata", window.__focusFlowProfileHandlers.onMetadata, true);
+            }
+            const onPlay = event => apply(event.target);
+            const onMetadata = event => apply(event.target);
+            document.addEventListener("play", onPlay, true);
+            document.addEventListener("loadedmetadata", onMetadata, true);
+            window.__focusFlowProfileHandlers = { onPlay, onMetadata };
             window.__focusFlowProfileObserver?.disconnect?.();
             const observer = new MutationObserver(records => {
               for (const record of records) for (const node of record.addedNodes) {
@@ -59,6 +67,7 @@
             });
             if (document.documentElement) observer.observe(document.documentElement, { childList: true, subtree: true });
             window.__focusFlowProfileObserver = observer;
+            window.__focusFlowProfileRate = playbackRate;
           },
           args: [rate]
         });
