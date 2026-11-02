@@ -184,6 +184,16 @@ Open **Insights** and choose the panel you want:
 - **Badges:** achievements earned from tracked activity.
 - **Coding:** time on supported coding platforms and platform breakdown.
 - **Reports:** weekly summary and export options.
+- **Smart Insights:** local analysis of study-time trends, focus share, top distractions, Smart Focus sessions, and practical suggestions.
+
+#### Smart Insights
+
+1. Open **Insights → Smart Insights**.
+2. Review your seven-day study time, focus share, week-over-week trend, and best study day.
+3. Check the top non-study sites and recent Smart Focus session completion rate.
+4. Use the suggestions as small experiments—not as a score or judgment.
+
+Smart Insights runs locally using tracked browsing time, your Study/other site categories, and Smart Focus session history. It compares the latest seven days with the previous seven days. It does not upload browsing history or infer activity outside the extension's tracking data.
 
 Insights depend on the activity FocusFlow has collected since installation. Empty or incomplete charts are normal when you are just getting started.
 
