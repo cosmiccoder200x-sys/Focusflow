@@ -49,8 +49,16 @@ function getTodayKey() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-function isBlocked(domain) {
+async function isBlocked(domain) {
   if (!domain) return false;
+  const saved = await chrome.storage.local.get("smartFocusState");
+  const focus = saved.smartFocusState;
+  if (focus?.status === "running" && focus.endTime > Date.now()) {
+    if (focus.overrideUntil && focus.overrideUntil > Date.now()) return false;
+    const matches = site => domain === site || domain.endsWith("." + site);
+    if ((focus.allowedSites || []).some(matches)) return false;
+    if ((focus.blockedSites || []).some(matches)) return true;
+  }
   return BLOCKED_SITES.some(b => domain === b || domain.endsWith("." + b));
 }
 
@@ -124,7 +132,7 @@ async function handleTabFocus(tabId) {
       await stopTracking(); return;
     }
     const domain = getDomain(tab.url);
-    if (isBlocked(domain)) {
+    if (await isBlocked(domain)) {
       chrome.tabs.update(tabId, { url: chrome.runtime.getURL("blocked.html") });
       await stopTracking(); return;
     }
@@ -408,4 +416,4 @@ chrome.runtime.onInstalled.addListener(() => focusFlowApplyDarkToOpenTabs());
 
 
 // Website profile automation (kept separate from existing tracking and dark-mode handlers).
-importScripts("profiles-background.js");
+importScripts("profiles-background.js", "smart-focus-background.js");
