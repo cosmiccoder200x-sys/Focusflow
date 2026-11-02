@@ -18,7 +18,12 @@
       <div class="brand-version">PRODUCTIVITY WORKSPACE</div>
     </div>
   </div>
-  <div id="totalUsage" class="total-usage">⏱ 0s today</div>
+  <div class="header-actions">
+    <button id="quickDarkToggle" class="quick-dark-btn" type="button" aria-pressed="false" title="Toggle dark mode for this website">
+      <span aria-hidden="true">◐</span><span id="quickDarkLabel">Dark</span>
+    </button>
+    <div id="totalUsage" class="total-usage">⏱ 0s today</div>
+  </div>
 </header>
 
 <!-- Primary navigation: five focused workspaces -->
@@ -97,14 +102,19 @@
   <input type="range" id="speedSlider" min="0.25" max="15" step="0.25" value="1" class="slider" />
   <div class="preset-row">
     <button class="preset-btn" data-speed="0.5">0.5x</button>
+    <button class="preset-btn" data-speed="0.75">0.75x</button>
     <button class="preset-btn active" data-speed="1">1x</button>
+    <button class="preset-btn" data-speed="1.25">1.25x</button>
     <button class="preset-btn" data-speed="1.5">1.5x</button>
+    <button class="preset-btn" data-speed="1.75">1.75x</button>
     <button class="preset-btn" data-speed="2">2x</button>
+    <button class="preset-btn" data-speed="2.5">2.5x</button>
     <button class="preset-btn" data-speed="5">5x</button>
     <button class="preset-btn" data-speed="10">10x</button>
     <button class="preset-btn" data-speed="15">15x</button>
   </div>
   <button id="applySpeed" class="btn btn-primary" style="margin-top:12px;width:100%">Apply to Page</button>
+  <p id="speedStatus" class="tool-status" role="status">Works on YouTube and HTML5 video/audio players. Keeps the selected speed for videos loaded later.</p>
 </section>
 
 <!-- ===== POMO TAB ===== -->
@@ -363,7 +373,8 @@
   <div class="dark-style-row">
     <div class="small-label">Style:</div>
     <div class="dark-style-btns">
-      <button class="dark-style-btn active" data-style="invert">Invert</button>
+      <button class="dark-style-btn active" data-style="smart">Smart</button>
+      <button class="dark-style-btn" data-style="invert">Invert</button>
       <button class="dark-style-btn" data-style="dim">Dim</button>
       <button class="dark-style-btn" data-style="grayscale">Grayscale</button>
     </div>
