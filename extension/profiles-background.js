@@ -91,7 +91,7 @@
     try { await enforceTab(await chrome.tabs.get(tabId)); } catch (_) {}
   });
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "local" && (changes.siteProfiles || changes.timeData)) checkActiveTab();
+    if (area === "local" && changes.siteProfiles) checkActiveTab();
   });
   chrome.alarms.onAlarm.addListener(alarm => {
     if (alarm.name === ALARM) checkActiveTab();
