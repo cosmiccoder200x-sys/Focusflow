@@ -1,4 +1,4 @@
-#  FocusFlow — Productivity Suite
+# FocusFlow — Productivity Suite
 
 > A minimal Chrome productivity workspace for screen-time tracking, distraction blocking, deep work, and useful insights.
 
@@ -8,24 +8,40 @@
 
 ---
 
-## 📦 Installation
+## Installation
 
-```bash
-# Option 1 — Load Unpacked (Developer Mode)
-1. Download & extract the zip
-2. Go to chrome://extensions
-3. Enable Developer Mode (top right)
-4. Click "Load Unpacked"
-5. Select the extracted folder (containing manifest.json)
+1. Download or clone this repository.
+2. Open `chrome://extensions` in Chrome.
+3. Enable **Developer mode**.
+4. Click **Load unpacked**.
+5. Select the **`extension/` folder** (the folder that directly contains `manifest.json`).
 
-# Option 2 — Clone repo
-git clone https://github.com/yourusername/focusflow.git
-# Then load unpacked from the cloned folder
+Do not select the repository root or an archived folder.
+
+```text
+Focusflow/
+├── extension/          ← Load this folder in Chrome
+│   ├── manifest.json
+│   ├── background.js
+│   ├── popup.html
+│   ├── popup.css
+│   ├── popup.js
+│   ├── options.html
+│   ├── options.js
+│   ├── blocked.html
+│   ├── blocked.css
+│   ├── blocked.js
+│   ├── syncManager.js
+│   ├── sync-service.js
+│   └── icon.png
+├── api/                ← Vercel backend
+├── package.json
+└── README.md
 ```
 
 ---
 
-## ✨ Features
+## Features
 
 | Workspace | Features |
 |-----|---------|
@@ -35,105 +51,41 @@ git clone https://github.com/yourusername/focusflow.git
 | Insights | Activity heatmap, streaks, badges, productivity score, coding dashboard and reports |
 | Settings | Themes, backup, restore, reset and RangOS sync configuration |
 
+## Workspace navigation
 
+FocusFlow groups its tools into five workspaces: **Home**, **Focus**, **Tools**, **Insights**, and **Settings**. The redesign keeps the existing feature panels and local storage model so existing user data remains in place.
 
+## Dark Mode
 
+- Global and per-site controls
+- Smart, Invert, Dim, and Grayscale styles
+- Intensity control
+- Persistent preferences across sessions
 
+## Video Speed
 
+Adjust HTML5 video and audio playback speed using presets or the slider, including on YouTube.
 
+## Coding Dashboard
 
+Tracks time on coding platforms such as LeetCode, Codeforces, CodeChef, HackerRank, GitHub, and GeeksforGeeks.
 
----
+## RangOS Sync
 
-## 🧭 Workspace navigation
+The repository also contains a Vercel API backend under `api/`. See [SETUP.md](SETUP.md) for backend configuration.
 
-FocusFlow groups its existing tools into five workspaces: **Home**, **Focus**, **Tools**, **Insights**, and **Settings**. The redesign keeps the original feature panels and local storage model so existing user data remains in place.
+## Permissions
 
-## 🌙 Dark Mode
-
-Force dark mode on any website using CSS injection.
-
-- **Global toggle** — enables dark mode on all sites at once
-- **Per-site toggle** — override for the current site only
-- **3 styles:** Invert · Dim · Grayscale
-- **Intensity slider** — fine-tune the effect
-- Persists across sessions
-
----
-
-## 💻 Coding Dashboard
-
-Tracks time on:
-
-`leetcode.com` · `codeforces.com` · `codechef.com` · `hackerrank.com` · `github.com` · `geeksforgeeks.org`
-
----
-
-## 🏆 Achievements
-
-| Badge | Requirement |
-|-------|-------------|
-| 🎯 First Focus | Complete first Pomodoro session |
-| 🔥 7 Day Streak | 7 consecutive productive days |
-| ⚡ 30 Day Streak | 30 consecutive productive days |
-| 💯 100 Hours | 100 hours of total focus time |
-| ✅ 500 Tasks | Complete 500 tasks |
-| 🍅 Pomo Master | 50 Pomodoro study sessions |
-| 🧠 Deep Work | One 4-hour focus day |
-| ⚔️ Coding Warrior | 20 hours on coding platforms |
-
----
-
-## 🗂 File Structure
-
-```
-focusflow/
-├── manifest.json       # Extension config (MV3)
-├── background.js       # Service worker — tracking, blocking, alarms
-├── popup.html          # Five-workspace popup interface
-├── popup.css           # Minimal design system and theme variants
-├── popup.js            # Existing feature logic and workspace navigation
-├── syncManager.js      # HabitOS integration architecture
-├── blocked.html        # Blocked site page
-├── blocked.css         # Matrix rain styles
-├── blocked.js          # Matrix rain animation
-└── icon.png            # Extension icon
-```
-
----
-
-## 🔮 RangOS Sync
-
-FocusFlow syncs your daily screen-time data to your Notion "RangOS — Screen Time" database automatically.
-
-```
-FocusFlow Extension → Chrome Storage → sync-service.js → Vercel API → Notion → RangOS
-```
-
-- **Every 15 minutes** — periodic sync of today's data
-- **Daily at 23:58** — end-of-day final sync
-- **Manual sync** — via the extension options page
-- **Secure** — shared secret authentication, Notion token never leaves the server
-
-See [SETUP.md](SETUP.md) for full deployment and configuration instructions.
-
----
-
-## 🛠 Permissions
-
-| Permission | Why |
-|------------|-----|
+| Permission | Purpose |
+|------------|---------|
 | `tabs` | Track active tab URL |
-| `storage` | Save all data locally |
-| `alarms` | 1-second tick + Pomodoro timer + RangOS sync |
+| `storage` | Save data locally |
+| `alarms` | Tracking and Pomodoro timers |
 | `notifications` | Pomodoro completion alerts |
-| `scripting` | Dark mode CSS injection + video speed |
-| `activeTab` | Read current tab |
-| `host_permissions: <all_urls>` | Dark mode + blocking on all sites |
+| `scripting` | Dark-mode CSS injection and video speed |
+| `activeTab` | Access the current tab |
+| `host_permissions: <all_urls>` | Site tools across websites |
 
----
+## License
 
-## 📄 License
-
-MIT — Built for engineering students & professionals.
-
+MIT — Built for engineering students and professionals.
