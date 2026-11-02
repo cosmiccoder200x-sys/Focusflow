@@ -405,3 +405,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 chrome.runtime.onStartup.addListener(() => focusFlowApplyDarkToOpenTabs());
 chrome.runtime.onInstalled.addListener(() => focusFlowApplyDarkToOpenTabs());
+
+
+// Website profile automation (kept separate from existing tracking and dark-mode handlers).
+importScripts("profiles-background.js");
