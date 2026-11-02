@@ -45,7 +45,11 @@ git clone https://github.com/yourusername/focusflow.git
 
 ---
 
-## 🧭 Workspace navigation\n\nFocusFlow groups its existing tools into five workspaces: **Home**, **Focus**, **Tools**, **Insights**, and **Settings**. The redesign keeps the original feature panels and local storage model so existing user data remains in place.\n\n## 🌙 Dark Mode
+## 🧭 Workspace navigation
+
+FocusFlow groups its existing tools into five workspaces: **Home**, **Focus**, **Tools**, **Insights**, and **Settings**. The redesign keeps the original feature panels and local storage model so existing user data remains in place.
+
+## 🌙 Dark Mode
 
 Force dark mode on any website using CSS injection.
 
