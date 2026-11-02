@@ -1415,21 +1415,16 @@ function getDarkCSS(style, intensity) {
   return (DARK_STYLES[style] || DARK_STYLES.smart)(intensity);
 }
 
-async function applyDarkToTab(tabId, enabled, style, intensity) {
+async function applyDarkToTab(tabId, enabled, style, intensity, previousStyle = style, previousIntensity = intensity) {
   const target = { tabId };
   try {
-    for (const name of Object.keys(DARK_STYLES)) {
-      for (let level = 50; level <= 100; level += 5) {
-        await chrome.scripting.removeCSS({ target, css: getDarkCSS(name, level) }).catch(() => {});
-      }
-    }
-    // Remove legacy v4 filters from earlier versions.
-    for (const name of ["invert", "dim", "grayscale"]) {
-      await chrome.scripting.removeCSS({ target, css: name === "invert"
-        ? `html { filter: invert(90%) hue-rotate(180deg) !important; } img, video, canvas, iframe, svg { filter: invert(100%) hue-rotate(180deg) !important; }`
-        : name === "dim" ? `html { filter: brightness(54%) !important; }`
-        : `html { filter: grayscale(100%) invert(90%) !important; img, video, canvas { filter: invert(100%) !important; }` }).catch(() => {});
-    }
+    await chrome.scripting.removeCSS({
+      target, css: getDarkCSS(previousStyle, previousIntensity)
+    }).catch(() => {});
+    await chrome.scripting.removeCSS({
+      target,
+      css: `html { filter: invert(90%) hue-rotate(180deg) !important; } img, video, canvas, iframe, svg { filter: invert(100%) hue-rotate(180deg) !important; }`
+    }).catch(() => {});
     if (enabled) await chrome.scripting.insertCSS({ target, css: getDarkCSS(style, intensity) });
   } catch(e) {
     console.warn("Dark mode injection failed:", e.message);
@@ -1485,13 +1480,13 @@ async function syncDarkToCurrentTab() {
   } catch(e) { console.warn("Dark sync error:", e); }
 }
 
-async function applyDarkToAllTabs() {
+async function applyDarkToAllTabs(previousStyle = darkState.style, previousIntensity = darkState.intensity) {
   const tabs = await chrome.tabs.query({});
   for (const tab of tabs) {
     if (!isSupportedPage(tab)) continue;
     try {
       const domain = new URL(tab.url).hostname.replace(/^www\./, "");
-      await applyDarkToTab(tab.id, getDarkEnabledForDomain(domain), darkState.style, darkState.intensity);
+      await applyDarkToTab(tab.id, getDarkEnabledForDomain(domain), darkState.style, darkState.intensity, previousStyle, previousIntensity);
     } catch {}
   }
   await syncDarkToCurrentTab();
@@ -1551,18 +1546,22 @@ document.getElementById("darkSiteToggle").addEventListener("change", async (e) =
 
 document.querySelectorAll(".dark-style-btn").forEach(btn => {
   btn.addEventListener("click", async () => {
+    const previousStyle = darkState.style;
+    const previousIntensity = darkState.intensity;
     darkState.style = btn.dataset.style;
     document.querySelectorAll(".dark-style-btn").forEach(b => b.classList.toggle("active", b.dataset.style === darkState.style));
     await saveDarkState();
-    await applyDarkToAllTabs();
+    await applyDarkToAllTabs(previousStyle, previousIntensity);
   });
 });
 
 document.getElementById("darkIntensity").addEventListener("input", async (e) => {
+  const previousStyle = darkState.style;
+  const previousIntensity = darkState.intensity;
   darkState.intensity = parseInt(e.target.value, 10);
   document.getElementById("darkIntensityVal").textContent = darkState.intensity + "%";
   await saveDarkState();
-  await applyDarkToAllTabs();
+  await applyDarkToAllTabs(previousStyle, previousIntensity);
 });
 
 loadDarkState().then(() => syncDarkToCurrentTab());
