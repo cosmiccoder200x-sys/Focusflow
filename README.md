@@ -27,7 +27,7 @@ FocusFlow brings screen-time tracking, website blocking, a Pomodoro timer, tasks
 | Workspace | What it is for |
 | --- | --- |
 | **Home** | A minimal overview of your current browsing activity and quick controls |
-| **Focus** | Pomodoro timer, tasks, and quick notes |
+| **Focus** | Smart Focus sessions, Pomodoro timer, tasks, and quick notes |
 | **Tools** | Block distracting websites, adjust video speed, and enable website dark mode |
 | **Insights** | Review activity, streaks, achievements, productivity score, coding activity, and reports |
 | **Settings** | Manage preferences, export or restore data, and reset data |
@@ -98,6 +98,19 @@ You can use the extension gradually. You do not need to configure every tool bef
 5. Use **Reset** to restart the current timer.
 
 The extension keeps Pomodoro session state and history in Chrome storage. A completed session can trigger a browser notification if Chrome notifications are allowed.
+
+#### Smart Focus (feature-branch preview)
+
+1. Open **Focus → Smart Focus**.
+2. Choose **25 min**, **50 min**, **90 min**, or **Custom**.
+3. Edit the distraction list and the sites that should always be allowed during the session. Separate domains with commas.
+4. Select **Start focus**. FocusFlow applies the session's temporary block and allow rules while the countdown runs.
+5. Use **Pause** to pause the countdown and temporarily suspend Smart Focus blocking. Select **Resume** to reactivate both.
+6. Use **Emergency override · 5 minutes** when you need a short exception. The session timer continues, and blocking automatically resumes when the override expires.
+7. Select **End session** to stop early and save actual focused time. Completed and ended sessions appear under Recent Focus Sessions.
+
+Smart Focus rules are additive: they do not overwrite your regular blocked-sites list or Website Profiles. The session's allow list takes priority over blocked-site rules while the session is running. Paused sessions do not apply Smart Focus rules. Session state and history are stored locally and included in JSON backup/restore.
+
 
 #### Tasks
 
@@ -241,11 +254,11 @@ For backend development and deployment, follow [SETUP.md](SETUP.md). Do not comm
 
 The next productivity upgrade is being developed separately and is intended to connect:
 
-- **Smart Focus Mode:** 25-, 50-, 90-minute, and custom sessions, session-aware site blocking, pause/resume, and an emergency override.
+- **Smart Focus Mode:** an initial implementation is available on this feature branch, including 25-, 50-, 90-minute and custom sessions, temporary site blocking/allow lists, pause/resume, a five-minute emergency override, and actual-time session history.
 - **Daily Goals:** daily focus-time and task targets, progress indicators, and streak history.
 - **Website Profiles:** an initial implementation is available on this feature branch: per-site playback speed, daily time limits, dark-mode overrides, and enable/disable controls. It still needs browser-level regression testing before release.
 
-Smart Focus Mode and Daily Goals remain planned. Website Profiles are a branch preview only; do not treat them as released until the pull request is reviewed, tested, and merged.
+Daily Goals remain planned. Smart Focus Mode and Website Profiles are feature-branch previews only; do not treat them as released until the pull request is reviewed, browser-tested, and merged.
 
 ---
 

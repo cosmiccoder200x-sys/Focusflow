@@ -39,6 +39,7 @@
     <button class="tab-btn active" data-tab="track">Overview</button>
   </div>
   <div class="nav-group" data-group="focus" hidden>
+    <button class="tab-btn" data-tab="smartfocus">Smart Focus</button>
     <button class="tab-btn" data-tab="pomo">Timer</button>
     <button class="tab-btn" data-tab="tasks">Tasks</button>
     <button class="tab-btn" data-tab="notes">Notes</button>
@@ -139,6 +140,43 @@
   </div>
   <button id="applySpeed" class="btn btn-primary" style="margin-top:12px;width:100%">Apply to Page</button>
   <p id="speedStatus" class="tool-status" role="status">Works on YouTube and HTML5 video/audio players. Keeps the selected speed for videos loaded later.</p>
+</section>
+
+<!-- ===== SMART FOCUS TAB ===== -->
+<section class="tab-content" id="tab-smartfocus">
+  <p class="section-title">Smart Focus</p>
+  <p class="smart-focus-intro">Choose a session, block distractions, and protect time for meaningful work.</p>
+  <div class="sf-session-card">
+    <div class="sf-session-top"><span id="sfSessionStatus" class="sf-session-status">READY TO FOCUS</span><span id="sfSessionRemaining" class="sf-session-remaining">—</span></div>
+    <div class="sf-session-track"><div id="sfSessionProgress" class="sf-session-progress"></div></div>
+    <div class="sf-session-clock" id="sfSessionClock">25:00</div>
+    <div class="sf-session-caption" id="sfSessionCaption">Your next focused session starts here</div>
+  </div>
+  <div class="sf-config-card">
+    <label class="sf-field-label">SESSION LENGTH</label>
+    <div class="sf-presets">
+      <button type="button" class="sf-preset active" data-sf-duration="25">25 min</button>
+      <button type="button" class="sf-preset" data-sf-duration="50">50 min</button>
+      <button type="button" class="sf-preset" data-sf-duration="90">90 min</button>
+      <button type="button" class="sf-preset" data-sf-duration="custom">Custom</button>
+    </div>
+    <div class="sf-custom-row"><label for="sfCustomMinutes">Custom minutes</label><input id="sfCustomMinutes" class="text-input" type="number" min="1" max="720" value="50" /></div>
+    <label class="sf-field-label" for="sfBlockedSites">BLOCK THESE WEBSITES</label>
+    <textarea id="sfBlockedSites" class="sf-domain-input" rows="2" placeholder="instagram.com, reddit.com, youtube.com"></textarea>
+    <label class="sf-field-label" for="sfAllowedSites">ALWAYS ALLOW DURING THIS SESSION</label>
+    <textarea id="sfAllowedSites" class="sf-domain-input" rows="2" placeholder="github.com, leetcode.com, study.iitm.ac.in"></textarea>
+    <p class="sf-help">Separate domains with commas. Focus rules are temporary and do not replace your regular blocked-sites list. Allowed sites take priority during this session.</p>
+    <div class="sf-controls">
+      <button type="button" id="sfStart" class="btn btn-primary">Start focus</button>
+      <button type="button" id="sfPause" class="btn btn-ghost" hidden>Pause</button>
+      <button type="button" id="sfResume" class="btn btn-primary" hidden>Resume</button>
+      <button type="button" id="sfEnd" class="btn btn-ghost" hidden>End session</button>
+    </div>
+    <button type="button" id="sfOverride" class="sf-override" hidden>Emergency override · 5 minutes</button>
+    <p id="sfMessage" class="sf-message" role="status" aria-live="polite"></p>
+  </div>
+  <div class="sf-history-head"><span>RECENT FOCUS SESSIONS</span><span id="sfHistoryCount">0</span></div>
+  <div id="sfHistory" class="sf-history"><div class="empty-state">Your completed sessions will appear here.</div></div>
 </section>
 
 <!-- ===== POMO TAB ===== -->
@@ -413,5 +451,6 @@
 
 <script src="popup.js"></script>
 <script src="profiles.js"></script>
+<script src="smart-focus.js"></script>
 </body>
 </html>
