@@ -943,27 +943,3 @@ button.home-tool-card{cursor:pointer;transition:transform .18s ease,border-color
 .preset-btn.active,.dark-style-btn.active,.theme-btn.active{color:var(--accent);border-color:var(--accent);background:var(--accent-dim)}
 .quick-dark-btn.is-on{color:var(--accent);border-color:rgba(84,227,154,.4);background:var(--accent-dim)}#speedSlider{accent-color:var(--accent)}
 @media(prefers-reduced-transparency:reduce){.header,.workspace-nav,.feature-nav,.home-live-card,.home-tool-card{backdrop-filter:none;-webkit-backdrop-filter:none}}
-
-/* ===== WEBSITE PROFILES ===== */
-.profile-intro,.profile-help{color:var(--text2);font-size:11px;line-height:1.55}
-.profile-form{display:flex;flex-direction:column;gap:9px;padding:12px;background:rgba(255,255,255,.025);border:1px solid var(--border2);border-radius:12px}
-.profile-form label{font-size:10px;color:var(--text2);font-weight:650;letter-spacing:.5px}
-.profile-form .text-input{width:100%;min-width:0;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:9px;font:inherit}
-.profile-domain-row{display:flex;gap:7px}
-.profile-domain-row .text-input{flex:1}
-.profile-domain-row .btn{white-space:nowrap;padding:0 10px}
-.profile-check-row{display:flex;align-items:center;gap:8px;padding:4px 0}
-.profile-check-row input{accent-color:var(--accent)}
-.profile-field-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.profile-field-grid>div{min-width:0}
-.profile-save{width:100%;margin-top:2px}
-.profile-status{min-height:14px;color:var(--accent);font-size:10px}
-.profile-list-heading{display:flex;justify-content:space-between;align-items:center;color:var(--text2);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-top:5px}
-.profile-list{display:flex;flex-direction:column;gap:7px}
-.profile-item{display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg2);border:1px solid var(--border2);border-radius:9px}
-.profile-item-main{flex:1;min-width:0}
-.profile-item-domain{font:600 11px var(--font-mono);color:var(--text)}
-.profile-item-meta{font-size:10px;color:var(--text2);margin-top:4px;line-height:1.4}
-.profile-item-actions{display:flex;gap:5px}
-.profile-item-actions button{border:1px solid var(--border2);background:var(--bg3);color:var(--text2);border-radius:6px;padding:5px 7px;font-size:10px;cursor:pointer}
-.profile-item-actions button:hover{border-color:var(--accent);color:var(--accent)}
