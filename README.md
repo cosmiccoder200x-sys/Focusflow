@@ -1,6 +1,6 @@
 #  FocusFlow — Productivity Suite
 
-> Chrome extension — track sites, block distractions, Pomodoro timer, dark mode & coding dashboard
+> A minimal Chrome productivity workspace for screen-time tracking, distraction blocking, deep work, and useful insights.
 
 ![Version](https://img.shields.io/badge/version-4.0-gold)
 ![Manifest](https://img.shields.io/badge/manifest-v3-blue)
@@ -27,23 +27,27 @@ git clone https://github.com/yourusername/focusflow.git
 
 ## ✨ Features
 
-| Tab | Feature |
+| Workspace | Features |
 |-----|---------|
-| 📊 Track | Live site tracking, 7-day graph, Study/Waste toggle |
-| 🚫 Block | Block distracting sites, auto-blocks while tasks pending |
-| ⚡ Speed | Video speed controller (0.25x → 15x) |
-| 🍅 Pomo | Pomodoro timer with background alarm |
-| 📝 Notes | Auto-saving quick notes |
-| ✅ Tasks | Task list with site-blocking integration |
-| 🗓 Stats | GitHub-style 365-day heatmap + streaks |
-| 🏆 Badges | 8 achievements with progress tracking |
-| 🎯 Score | Daily productivity score (0–100) + category pie |
-| 💻 Coding | Dashboard for LeetCode, GitHub, Codeforces & more |
-| 📋 Report | Weekly report — export JSON / CSV |
-| 🌙 Dark | Dark mode for any website, per-site control |
-| ⚙️ Settings | Themes, backup, restore, reset |
+| Home | Live site tracking, daily overview and time breakdown |
+| Focus | Pomodoro, task list, quick notes and task-aware blocking |
+| Tools | Website blocking, video speed control and website dark mode |
+| Insights | Activity heatmap, streaks, badges, productivity score, coding dashboard and reports |
+| Settings | Themes, backup, restore, reset and RangOS sync configuration |
+
+
+
+
+
+
+
+
 
 ---
+
+## 🧭 Workspace navigation
+
+FocusFlow groups its existing tools into five workspaces: **Home**, **Focus**, **Tools**, **Insights**, and **Settings**. The redesign keeps the original feature panels and local storage model so existing user data remains in place.
 
 ## 🌙 Dark Mode
 
@@ -86,9 +90,9 @@ Tracks time on:
 focusflow/
 ├── manifest.json       # Extension config (MV3)
 ├── background.js       # Service worker — tracking, blocking, alarms
-├── popup.html          # Main UI (13 tabs)
-├── popup.css           # Styles + 4 theme variants
-├── popup.js            # All tab logic + dark mode injection
+├── popup.html          # Five-workspace popup interface
+├── popup.css           # Minimal design system and theme variants
+├── popup.js            # Existing feature logic and workspace navigation
 ├── syncManager.js      # HabitOS integration architecture
 ├── blocked.html        # Blocked site page
 ├── blocked.css         # Matrix rain styles

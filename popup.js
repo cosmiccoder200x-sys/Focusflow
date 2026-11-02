@@ -5,19 +5,40 @@
 // TAB NAVIGATION
 // =============================================
 
+function activateFeatureTab(btn) {
+  if (!btn) return;
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(s => s.classList.remove("active"));
+  btn.classList.add("active");
+  const panel = document.getElementById("tab-" + btn.dataset.tab);
+  if (panel) panel.classList.add("active");
+  // Keep the original lazy-render behaviour for analytics panels.
+  if (btn.dataset.tab === "stats") renderHeatmap();
+  if (btn.dataset.tab === "badges") renderBadges();
+  if (btn.dataset.tab === "score") renderScore();
+  if (btn.dataset.tab === "code") renderCodingDashboard();
+  if (btn.dataset.tab === "report") renderReport();
+}
+
 document.querySelectorAll(".tab-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    document.querySelectorAll(".tab-content").forEach(s => s.classList.remove("active"));
-    btn.classList.add("active");
-    const tabId = "tab-" + btn.dataset.tab;
-    document.getElementById(tabId).classList.add("active");
-    // Lazy render tabs
-    if (btn.dataset.tab === "stats")    renderHeatmap();
-    if (btn.dataset.tab === "badges")   renderBadges();
-    if (btn.dataset.tab === "score")    renderScore();
-    if (btn.dataset.tab === "code")     renderCodingDashboard();
-    if (btn.dataset.tab === "report")   renderReport();
+  btn.addEventListener("click", () => activateFeatureTab(btn));
+});
+
+document.querySelectorAll(".workspace-btn").forEach(workspaceBtn => {
+  workspaceBtn.addEventListener("click", () => {
+    const groupName = workspaceBtn.dataset.navGroup;
+    document.querySelectorAll(".workspace-btn").forEach(btn => {
+      const selected = btn === workspaceBtn;
+      btn.classList.toggle("active", selected);
+      btn.setAttribute("aria-pressed", String(selected));
+    });
+    document.querySelectorAll(".nav-group").forEach(group => {
+      const selected = group.dataset.group === groupName;
+      group.hidden = !selected;
+      group.classList.toggle("active", selected);
+    });
+    const firstFeature = document.querySelector('.nav-group[data-group="' + groupName + '"] .tab-btn');
+    activateFeatureTab(firstFeature);
   });
 });
 

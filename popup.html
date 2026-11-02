@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>FocusFlow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b0e0c" />
+  <title>FocusFlow — Daily workspace</title>
   <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
@@ -13,30 +15,44 @@
     <div class="brand-icon-wrap">⚡</div>
     <div>
       <div class="brand-name">FocusFlow</div>
-      <div class="brand-version">PRO v4.0 &nbsp;<span class="godmode-badge">GODMODE</span></div>
+      <div class="brand-version">PRODUCTIVITY WORKSPACE</div>
     </div>
   </div>
   <div id="totalUsage" class="total-usage">⏱ 0s today</div>
 </header>
 
-<!-- NAV ROW 1 -->
-<nav class="nav">
-  <button class="tab-btn active" data-tab="track">Track</button>
-  <button class="tab-btn" data-tab="block">Block</button>
-  <button class="tab-btn" data-tab="speed">Speed</button>
-  <button class="tab-btn" data-tab="pomo">Pomo</button>
-  <button class="tab-btn" data-tab="notes">Notes</button>
-  <button class="tab-btn" data-tab="tasks">Tasks</button>
+<!-- Primary navigation: five focused workspaces -->
+<nav class="workspace-nav" aria-label="FocusFlow workspaces">
+  <button class="workspace-btn active" type="button" data-nav-group="home">Home</button>
+  <button class="workspace-btn" type="button" data-nav-group="focus">Focus</button>
+  <button class="workspace-btn" type="button" data-nav-group="tools">Tools</button>
+  <button class="workspace-btn" type="button" data-nav-group="insights">Insights</button>
+  <button class="workspace-btn" type="button" data-nav-group="settings">Settings</button>
 </nav>
-<!-- NAV ROW 2 -->
-<nav class="nav nav2">
-  <button class="tab-btn" data-tab="stats">Stats</button>
-  <button class="tab-btn" data-tab="badges">Badges</button>
-  <button class="tab-btn" data-tab="score">Score</button>
-  <button class="tab-btn" data-tab="code">Coding</button>
-  <button class="tab-btn" data-tab="report">Report</button>
-  <button class="tab-btn" data-tab="settings">Settings</button>
-  <button class="tab-btn" data-tab="dark">Dark</button>
+<nav class="feature-nav" aria-label="Workspace features">
+  <div class="nav-group active" data-group="home">
+    <button class="tab-btn active" data-tab="track">Overview</button>
+  </div>
+  <div class="nav-group" data-group="focus" hidden>
+    <button class="tab-btn" data-tab="pomo">Timer</button>
+    <button class="tab-btn" data-tab="tasks">Tasks</button>
+    <button class="tab-btn" data-tab="notes">Notes</button>
+  </div>
+  <div class="nav-group" data-group="tools" hidden>
+    <button class="tab-btn" data-tab="block">Block</button>
+    <button class="tab-btn" data-tab="speed">Speed</button>
+    <button class="tab-btn" data-tab="dark">Dark mode</button>
+  </div>
+  <div class="nav-group" data-group="insights" hidden>
+    <button class="tab-btn" data-tab="stats">Activity</button>
+    <button class="tab-btn" data-tab="score">Score</button>
+    <button class="tab-btn" data-tab="badges">Badges</button>
+    <button class="tab-btn" data-tab="code">Coding</button>
+    <button class="tab-btn" data-tab="report">Reports</button>
+  </div>
+  <div class="nav-group" data-group="settings" hidden>
+    <button class="tab-btn" data-tab="settings">Preferences</button>
+  </div>
 </nav>
 
 <!-- ===== TRACK TAB ===== -->
