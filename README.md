@@ -32,6 +32,9 @@ FocusFlow brings screen-time tracking, website blocking, a Pomodoro timer, tasks
 | **Insights** | Review activity, streaks, achievements, productivity score, coding activity, and reports |
 | **Settings** | Manage preferences, export or restore data, and reset data |
 
+<img width="520" height="742" alt="image" src="https://github.com/user-attachments/assets/07ac7328-c6e8-4f08-bc9a-07965ebd0bae" />
+
+
 ## Install FocusFlow
 
 FocusFlow is currently loaded in Chrome as an unpacked extension.
