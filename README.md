@@ -35,14 +35,6 @@ git clone https://github.com/yourusername/focusflow.git
 | Insights | Activity heatmap, streaks, badges, productivity score, coding dashboard and reports |
 | Settings | Themes, backup, restore, reset and RangOS sync configuration |
 
-
-
-
-
-
-
-
-
 ---
 
 ## 🧭 Workspace navigation
@@ -94,9 +86,8 @@ focusflow/
 ├── popup.css           # Minimal design system and theme variants
 ├── popup.js            # Existing feature logic and workspace navigation
 ├── syncManager.js      # HabitOS integration architecture
-├── blocked.html        # Blocked site page
-├── blocked.css         # Matrix rain styles
-├── blocked.js          # Matrix rain animation
+├── blocked.html        # Focus-mode blocked-site page
+├── blocked.css         # Minimal emerald blocked-page styling
 └── icon.png            # Extension icon
 ```
 
@@ -136,4 +127,3 @@ See [SETUP.md](SETUP.md) for full deployment and configuration instructions.
 ## 📄 License
 
 MIT — Built for engineering students & professionals.
-

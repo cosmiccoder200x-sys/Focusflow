@@ -24,7 +24,7 @@
   "host_permissions": ["<all_urls>"],
   "web_accessible_resources": [
     {
-      "resources": ["blocked.html", "blocked.css", "blocked.js"],
+      "resources": ["blocked.html", "blocked.css"],
       "matches": ["<all_urls>"]
     }
   ]

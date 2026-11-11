@@ -2,30 +2,47 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Site Blocked — Coder IITM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#070b09" />
+  <title>FocusFlow — Stay focused</title>
   <link rel="stylesheet" href="blocked.css" />
 </head>
 <body>
-  <canvas id="matrix"></canvas>
+  <main class="page-shell">
+    <section class="blocked-card" aria-labelledby="page-title">
+      <header class="brand-row">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 3.5 19 7v5.1c0 4.2-2.9 7-7 8.4-4.1-1.4-7-4.2-7-8.4V7l7-3.5Z" />
+            <path d="m9 12 2 2 4-4" />
+          </svg>
+        </span>
+        <span class="brand-name">FocusFlow</span>
+        <span class="mode-label"><span class="status-dot"></span>FOCUS MODE</span>
+      </header>
 
-  <div class="warning-box">
-    <div class="skull">☠️</div>
-    <h1 class="warn-title">SITE BLOCKED</h1>
-    <p class="warn-msg">bhai sharam kar<br>khud block karke visit kar raha hai<br>jake padhai karle</p>
+      <div class="card-content">
+        <p class="eyebrow">A MOMENT TO RESET</p>
+        <h1 id="page-title">Stay focused on what matters.</h1>
+        <p class="description">
+          This website is currently blocked. Close this tab and give your attention
+          to the task you chose.
+        </p>
 
-    <div class="arrow-row">
-      <span class="arrow">↓</span>
-      <span class="arrow">↓</span>
-      <span class="arrow">↓</span>
-    </div>
+        <button class="close-btn" type="button" onclick="window.close()">
+          Close tab
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M4.5 10h11M10.5 5l5 5-5 5" />
+          </svg>
+        </button>
+      </div>
 
-    <a class="motivate-link" href="https://youtube.com/shorts/QpQJ6boEOH8?si=gbaxu7QZQu8aXU7W" target="_blank">
-      🔥 Watch This NOW
-    </a>
-
-    <button class="close-btn" onclick="window.close()">✕ Close This Tab</button>
-  </div>
-
-  <script src="blocked.js"></script>
+      <footer class="card-footer">
+        <span class="footer-line"></span>
+        <p>One task at a time. Make it count.</p>
+        <span class="footer-line"></span>
+      </footer>
+    </section>
+  </main>
 </body>
 </html>
