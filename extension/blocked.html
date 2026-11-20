@@ -2,30 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Site Blocked — Coder IITM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Site blocked | FocusFlow</title>
   <link rel="stylesheet" href="blocked.css" />
+  <script src="blocked.js" defer></script>
 </head>
 <body>
-  <canvas id="matrix"></canvas>
-
-  <div class="warning-box">
-    <div class="skull">☠️</div>
-    <h1 class="warn-title">SITE BLOCKED</h1>
-    <p class="warn-msg">bhai sharam kar<br>khud block karke visit kar raha hai<br>jake padhai karle</p>
-
-    <div class="arrow-row">
-      <span class="arrow">↓</span>
-      <span class="arrow">↓</span>
-      <span class="arrow">↓</span>
-    </div>
-
-    <a class="motivate-link" href="https://youtube.com/shorts/QpQJ6boEOH8?si=gbaxu7QZQu8aXU7W" target="_blank">
-      🔥 Watch This NOW
-    </a>
-
-    <button class="close-btn" onclick="window.close()">✕ Close This Tab</button>
-  </div>
-
-  <script src="blocked.js"></script>
+  <main class="blocked-card" aria-labelledby="blocked-title">
+    <p class="brand">FocusFlow</p>
+    <h1 id="blocked-title">Site blocked</h1>
+    <p class="description">FocusFlow blocked access to this site.</p>
+    <button id="close-tab" type="button">Close tab</button>
+    <p id="close-status" role="status"></p>
+  </main>
 </body>
 </html>
