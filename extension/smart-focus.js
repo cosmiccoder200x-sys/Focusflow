@@ -37,6 +37,8 @@
     const progress = duration ? Math.min(100, Math.max(0, elapsed / duration * 100)) : 0;
 
     $("sfSessionClock").textContent = formatTime(remaining);
+    $("homeFocusShortcut").textContent = running ? "Focus · " + formatTime(remaining)
+      : paused ? "Focus paused · " + formatTime(remaining) : "Set up focus";
     $("sfSessionProgress").style.width = progress + "%";
     $("sfSessionStatus").textContent = running ? "FOCUS SESSION ACTIVE" : paused ? "SESSION PAUSED" :
       state.status === "completed" ? "SESSION COMPLETE" : state.status === "ended" ? "SESSION ENDED" : "READY TO FOCUS";

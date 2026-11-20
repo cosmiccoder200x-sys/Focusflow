@@ -29,6 +29,7 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 document.querySelectorAll(".workspace-btn").forEach(workspaceBtn => {
   workspaceBtn.addEventListener("click", () => {
     const groupName = workspaceBtn.dataset.navGroup;
+    document.querySelector(".feature-nav").hidden = groupName === "home";
     document.querySelectorAll(".workspace-btn").forEach(btn => {
       const selected = btn === workspaceBtn;
       btn.classList.toggle("active", selected);
@@ -375,7 +376,8 @@ async function loadBlockList() {
   let resp;
   try { resp = await chrome.runtime.sendMessage({ type: "GET_BLOCKED_SITES" }); }
   catch { return; }
-  const sites = resp.sites || [];
+  const sites = resp?.sites || [];
+  document.getElementById("homeBlockCount").textContent = " (" + sites.length + ")";
   if (!sites.length) {
     list.innerHTML = '<li style="padding:10px;color:var(--text3);font-size:11px;font-family:monospace">No sites blocked.</li>';
     return;
@@ -456,7 +458,16 @@ document.querySelectorAll("[data-home-speed]").forEach(btn => btn.addEventListen
   document.querySelectorAll(".preset-btn").forEach(b => b.classList.toggle("active", Number(b.dataset.speed) === rate));
   applySelectedSpeed();
 }));
-document.getElementById("homeDarkShortcut")?.addEventListener("click", () => document.getElementById("quickDarkToggle")?.click());
+document.getElementById("homeFocusShortcut").addEventListener("click", () => {
+  document.querySelector('[data-nav-group="focus"]').click();
+  document.getElementById("smartFocusTitle").focus();
+});
+
+document.getElementById("homeBlockShortcut").addEventListener("click", () => {
+  document.querySelector('[data-nav-group="tools"]').click();
+  document.querySelector('[data-tab="block"]').click();
+  document.getElementById("blockInput").focus();
+});
 
 // =============================================
 // POMO TAB (preserved)
@@ -1667,11 +1678,11 @@ async function getCurrentDarkTab() {
 
 function updateQuickDarkButton(enabled) {
   const button = document.getElementById("quickDarkToggle");
-  const label = document.getElementById("quickDarkLabel");
   if (!button) return;
   button.classList.toggle("is-on", Boolean(enabled));
   button.setAttribute("aria-pressed", String(Boolean(enabled)));
-  if (label) label.textContent = enabled ? "Dark on" : "Dark";
+  button.disabled = !darkCurrentDomain;
+  button.title = darkCurrentDomain ? "Toggle dark mode for " + darkCurrentDomain : "Site dark mode is unavailable on this tab";
 }
 
 async function syncDarkToCurrentTab() {

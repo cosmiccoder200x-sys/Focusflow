@@ -1060,3 +1060,79 @@ button.home-tool-card{cursor:pointer;transition:transform .18s ease,border-color
 .insight-session-stat span{font-size:9px;color:var(--text3)}
 .insight-session-stat strong{font-size:14px;color:var(--text);font-family:var(--font-mono)}
 .insight-empty{padding:18px 12px;text-align:center;border:1px dashed var(--border2);border-radius:12px;color:var(--text3);font-size:10px;line-height:1.5}
+
+/* Popup shortcuts and site dark mode */
+[hidden].feature-nav,
+[hidden].total-usage {
+  display: none;
+}
+
+.header .quick-dark-btn {
+  gap: 9px;
+  min-height: 36px;
+  padding: 0 10px;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.quick-dark-btn:disabled {
+  opacity: .55;
+  cursor: default;
+}
+
+.quick-dark-switch {
+  display: flex;
+  align-items: center;
+  width: 28px;
+  height: 16px;
+  padding: 2px;
+  border: 1px solid var(--border2);
+  border-radius: 99px;
+  background: var(--bg4);
+}
+
+.quick-dark-switch::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text2);
+}
+
+.quick-dark-btn.is-on .quick-dark-switch {
+  justify-content: flex-end;
+  background: var(--accent);
+}
+
+.quick-dark-btn.is-on .quick-dark-switch::before {
+  background: #0a1710;
+}
+
+.home-title {
+  margin: 0 0 12px;
+  font-size: 24px;
+  line-height: 1.15;
+  letter-spacing: -.04em;
+}
+
+.home-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.home-actions .btn {
+  min-height: 38px;
+  padding-inline: 6px;
+}
+
+.quick-dark-btn:focus-visible,
+.home-actions button:focus-visible,
+.workspace-btn:focus-visible,
+.tab-btn:focus-visible,
+.sf-preset:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
