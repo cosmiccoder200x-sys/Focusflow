@@ -4,9 +4,9 @@
 
 FocusFlow is an open-source Chrome productivity extension combining website blocking, browsing-time tracking, Pomodoro sessions, tasks, notes, video-speed controls, website dark mode, and activity insights.
 
-**[Download FocusFlow v4.1.0 source ZIP](https://github.com/cosmiccoder200x-sys/Focusflow/archive/refs/heads/main.zip)** · [Install in Chrome](#install-focusflow) · [Learn the controls](#your-first-five-minutes) · [Privacy](docs/PRIVACY.md)
+**[Download FocusFlow v4.1.1 source ZIP](https://github.com/cosmiccoder200x-sys/Focusflow/archive/7fec9e8624e020fd9f9c021984cd027ac998447d.zip)** · [Install in Chrome](#install-focusflow) · [Learn the controls](#your-first-five-minutes) · [Privacy](docs/PRIVACY.md)
 
-FocusFlow v4.1.0 is available as an unpacked extension for desktop Chrome. The source ZIP includes everything needed for local use. Setup takes a few minutes and requires no account, backend, or API key.
+FocusFlow v4.1.1 is available as an unpacked extension for desktop Chrome. The source ZIP includes everything needed for local use. Setup takes a few minutes and requires no account, backend, or API key.
 
 ## What you can do with FocusFlow
 
@@ -23,7 +23,7 @@ FocusFlow v4.1.0 is available as an unpacked extension for desktop Chrome. The s
 
 ## Install FocusFlow
 
-1. [Download the v4.1.0 source ZIP](https://github.com/cosmiccoder200x-sys/Focusflow/archive/refs/heads/main.zip) and extract it.
+1. [Download the v4.1.1 source ZIP](https://github.com/cosmiccoder200x-sys/Focusflow/archive/7fec9e8624e020fd9f9c021984cd027ac998447d.zip) and extract it.
 2. In desktop Chrome, enter `chrome://extensions` in the address bar.
 3. Turn on **Developer mode**, then click **Load unpacked**.
 4. Open the extracted folder and select its **`extension/`** subfolder, which contains `manifest.json`.
@@ -211,7 +211,7 @@ FocusFlow measures active tab time only while a Chrome window is focused and the
 | Problem | Try this |
 | --- | --- |
 | FocusFlow does not appear after installation | Confirm Developer mode is enabled and that you loaded the `extension/` folder containing `manifest.json`. |
-| The popup appears as a thin strip | Open `chrome://extensions`, click **Reload** on FocusFlow, then reopen it. If the issue persists, include your Chrome version and a screenshot in a bug report. |
+| The popup appears as a thin strip | Check that FocusFlow shows **4.1.1** in `chrome://extensions`, then click **Reload** and reopen it. If the issue persists, include your Chrome version and a screenshot in a bug report. |
 | A feature does not respond | Open `chrome://extensions`, find FocusFlow, and inspect **Errors**. Then use the extension's reload button. |
 | A blocked website still opens | Check that its domain is in **Tools → Block list**, then reload the tab. Restricted browser pages cannot be controlled by extensions. |
 | Dark mode looks incorrect | Turn off the current-site override or choose another dark-mode style. |
@@ -221,7 +221,7 @@ FocusFlow measures active tab time only while a Chrome window is focused and the
 
 ## For developers
 
-**Validation:** Run `npm ci` and `npm run check` for manifest, JavaScript, backend, tracking, and layout checks. For browser behavior, follow the [manual Chrome checks](docs/RELEASE_CHECKLIST.md). `python3 scripts/package_extension.py` creates a **local, unpublished** ZIP after static path validation. Root `package.json` version 1.1.0 belongs to the optional backend and does not override extension manifest version 4.1.0.
+**Validation:** Run `npm ci` and `npm run check` for manifest, JavaScript, backend, tracking, and layout checks. For browser behavior, follow the [manual Chrome checks](docs/RELEASE_CHECKLIST.md). `python3 scripts/package_extension.py` creates a **local, unpublished** ZIP after static path validation. Root `package.json` version 1.1.0 belongs to the optional backend and does not override the version in `extension/manifest.json`.
 
 ### Project structure
 
@@ -240,7 +240,7 @@ For backend development and deployment, follow [SETUP.md](SETUP.md). Do not comm
 
 ## Build status
 
-Version 4.1.0 includes the emerald dashboard and its expanded sidebar view. Install it using the source ZIP above. See the [release checklist](docs/RELEASE_CHECKLIST.md) for browser-level validation and distribution steps.
+The v4.1.1 download includes the emerald dashboard and the toolbar popup width fix. Install it using the source ZIP above. See the [release checklist](docs/RELEASE_CHECKLIST.md) for browser-level validation and distribution steps.
 
 ## Contributing
 
