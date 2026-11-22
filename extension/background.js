@@ -67,156 +67,121 @@ function isCodingSite(domain) {
   return CODING_SITES.some(c => domain === c || domain.endsWith("." + c));
 }
 
-// ---- TRACKING STATE ----
-let activeTabId     = null;
-let activeTabDomain = null;
-let activeTabStart  = null;
+// ---- ACCURATE PER-SITE TRACKING (Manifest V3) ----
+// Pure ledger logic is unit-tested independently of the Chrome event adapters.
+importScripts("tracking-core.js");
+const TICK_ALARM = "tickAlarm";
+const POMO_ALARM = "pomoAlarm";
+const IDLE_THRESHOLD_SECONDS = 60;
+let trackingQueue = Promise.resolve();
 
-async function flushSeconds(domain, secs) {
-  if (!domain || secs <= 0) return;
-  const key = getTodayKey();
-  const r = await chrome.storage.local.get("timeData");
-  const timeData = r.timeData || {};
-  if (!timeData[key]) timeData[key] = {};
-  timeData[key][domain] = (timeData[key][domain] || 0) + Math.round(secs);
-  await chrome.storage.local.set({ timeData });
-
-  // Auto-categorize if not already categorized
-  if (SITE_CATEGORIES_AUTO[domain]) {
-    const cr = await chrome.storage.local.get("siteCategories");
-    const cats = cr.siteCategories || {};
-    if (!cats[domain]) {
-      cats[domain] = SITE_CATEGORIES_AUTO[domain];
-      await chrome.storage.local.set({ siteCategories: cats });
-    }
-  }
+// Chrome fires several navigation/focus/alarm events concurrently. Serialize all
+// read-modify-write cycles to avoid losing increments or double-counting a gap.
+function queueTracking(work) {
+  const next = trackingQueue.then(work);
+  trackingQueue = next.catch(error => console.warn("FocusFlow tracking:", error));
+  return next;
 }
 
-async function onTick() {
-  if (activeTabDomain && activeTabStart) {
-    const now = Date.now();
-    await flushSeconds(activeTabDomain, 1);
-    activeTabStart = now;
-  }
-  // Update productivity score every 60 seconds (handled by popup, but keep fresh)
+async function currentTrackingContext() {
+  // A background/unfocused Chrome window is not active browsing time.
+  const win = await chrome.windows.getLastFocused();
+  if (!win || !win.focused || !Number.isInteger(win.id)) return null;
+
+  // With the "idle" permission this also stops counting while locked/idle.
+  if (chrome.idle && await chrome.idle.queryState(IDLE_THRESHOLD_SECONDS) !== "active") return null;
+
+  const [tab] = await chrome.tabs.query({ active: true, windowId: win.id });
+  if (!tab || !Number.isInteger(tab.id) || tab.windowId !== win.id || !tab.active) return null;
+  if (!tab.url || !/^https?:\/\//i.test(tab.url)) return null;
+
+  const domain = getDomain(tab.url);
+  if (!domain || await isBlocked(domain)) return null;
+  return { tabId: tab.id, windowId: win.id, domain };
 }
 
-async function startTracking(tabId, domain) {
-  if (activeTabDomain && activeTabDomain !== domain && activeTabStart) {
-    const elapsed = (Date.now() - activeTabStart) / 1000;
-    if (elapsed > 0) await flushSeconds(activeTabDomain, elapsed);
-  }
-  activeTabId     = tabId;
-  activeTabDomain = domain;
-  activeTabStart  = Date.now();
-  await chrome.storage.local.set({
-    activeTracking: { tabId, domain, start: activeTabStart }
-  });
+async function persistTracking() {
+  const now = Date.now();
+  const context = await currentTrackingContext();
+  const before = await chrome.storage.local.get(["activeTracking", "timeData", "siteCategories"]);
+  const change = FocusFlowTrackingCore.reconcile(before, context, now, SITE_CATEGORIES_AUTO);
+
+  // One storage transaction includes the new checkpoint and its credited time.
+  // A restarted worker reads the checkpoint and cannot replay credited seconds.
+  const update = { activeTracking: change.activeTracking };
+  if (change.timeChanged) update.timeData = change.timeData;
+  if (change.categoriesChanged) update.siteCategories = change.siteCategories;
+  await chrome.storage.local.set(update);
 }
 
-async function stopTracking() {
-  if (activeTabDomain && activeTabStart) {
-    const elapsed = (Date.now() - activeTabStart) / 1000;
-    if (elapsed > 0) await flushSeconds(activeTabDomain, elapsed);
-  }
-  activeTabId     = null;
-  activeTabDomain = null;
-  activeTabStart  = null;
-  await chrome.storage.local.remove("activeTracking");
+function reconcileTracking() {
+  return queueTracking(persistTracking);
 }
 
+// All normal site changes are reconciled from the actual focused window/tab,
+// never from an unrelated background tab's onUpdated event.
 async function handleTabFocus(tabId) {
   try {
     const tab = await chrome.tabs.get(tabId);
-    if (!tab.url || tab.url.startsWith("chrome") || tab.url.startsWith("about")) {
-      await stopTracking(); return;
+    const domain = tab && getDomain(tab.url);
+    if (domain && await isBlocked(domain)) {
+      await chrome.tabs.update(tabId, { url: chrome.runtime.getURL("blocked.html") });
     }
-    const domain = getDomain(tab.url);
-    if (await isBlocked(domain)) {
-      chrome.tabs.update(tabId, { url: chrome.runtime.getURL("blocked.html") });
-      await stopTracking(); return;
-    }
-    if (domain) await startTracking(tabId, domain);
-    else await stopTracking();
-  } catch { await stopTracking(); }
+  } catch (_) { /* Tab may have closed during navigation. */ }
+  await reconcileTracking();
 }
 
-// ---- Alarms ----
-const TICK_ALARM = "tickAlarm";
-const POMO_ALARM = "pomoAlarm";
+async function onTick() {
+  await reconcileTracking();
+}
 
-chrome.alarms.onAlarm.addListener(async (alarm) => {
-  if (alarm.name === TICK_ALARM) { await onTick(); return; }
-  if (alarm.name === POMO_ALARM) { await handlePomoAlarm(); }
+chrome.alarms.onAlarm.addListener(alarm => {
+  if (alarm.name === TICK_ALARM) { onTick().catch(console.warn); return; }
+  if (alarm.name === POMO_ALARM) handlePomoAlarm();
 });
 
 async function init() {
-  const r = await chrome.storage.local.get("activeTracking");
-  if (r.activeTracking) {
-    const { tabId, domain, start } = r.activeTracking;
-    try {
-      const tab = await chrome.tabs.get(tabId);
-      if (tab && tab.active) {
-        activeTabId     = tabId;
-        activeTabDomain = domain;
-        const missedSec = Math.floor((Date.now() - start) / 1000);
-        if (missedSec > 0) await flushSeconds(domain, missedSec);
-        activeTabStart = Date.now();
-      }
-    } catch { await chrome.storage.local.remove("activeTracking"); }
-  }
+  // Chrome 120+ supports minimum 30-second alarms; 1-second alarms do not run
+  // at their requested cadence. Measure real elapsed time instead.
+  await chrome.alarms.create(TICK_ALARM, { periodInMinutes: 0.5 });
+  await reconcileTracking();
 
-  const existing = await chrome.alarms.get(TICK_ALARM);
-  if (!existing) {
-    chrome.alarms.create(TICK_ALARM, { periodInMinutes: 1/60 });
-  }
-
+  // Existing Pomodoro alarm behavior is preserved.
   const ps = await getPomoState();
   if (ps.running && ps.endTime && ps.endTime > Date.now()) {
-    const ex2 = await chrome.alarms.get(POMO_ALARM);
-    if (!ex2) chrome.alarms.create(POMO_ALARM, { when: ps.endTime });
+    const existing = await chrome.alarms.get(POMO_ALARM);
+    if (!existing) await chrome.alarms.create(POMO_ALARM, { when: ps.endTime });
   }
 }
 
-chrome.runtime.onInstalled.addListener(init);
-chrome.runtime.onStartup.addListener(init);
-init();
+chrome.runtime.onInstalled.addListener(() => { init().catch(console.warn); });
+chrome.runtime.onStartup.addListener(() => { init().catch(console.warn); });
+init().catch(console.warn);
 
-// ---- Tab Events ----
-chrome.tabs.onActivated.addListener(({ tabId }) => handleTabFocus(tabId));
-
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+// Re-query the *actual* focused browser state rather than trusting event args.
+chrome.tabs.onActivated.addListener(({ tabId }) => { handleTabFocus(tabId).catch(console.warn); });
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status !== "complete") return;
-  const domain = getDomain(tab.url);
-  if (await isBlocked(domain)) {
-    chrome.tabs.update(tabId, { url: chrome.runtime.getURL("blocked.html") });
-    await stopTracking(); return;
-  }
-  try {
-    const [active] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (active && active.id === tabId) await startTracking(tabId, domain);
-  } catch {}
+  handleTabFocus(tabId).catch(console.warn);
 });
-
-chrome.tabs.onRemoved.addListener(async (tabId) => {
-  if (tabId === activeTabId) await stopTracking();
-});
-
-chrome.windows.onFocusChanged.addListener(async (windowId) => {
-  if (windowId === chrome.windows.WINDOW_ID_NONE) return;
-  try {
-    const [tab] = await chrome.tabs.query({ active: true, windowId });
-    if (tab) await handleTabFocus(tab.id);
-    else await stopTracking();
-  } catch {}
-});
+chrome.tabs.onRemoved.addListener(() => { reconcileTracking().catch(console.warn); });
+chrome.windows.onFocusChanged.addListener(() => { reconcileTracking().catch(console.warn); });
+if (chrome.idle) {
+  chrome.idle.onStateChanged.addListener(() => { reconcileTracking().catch(console.warn); });
+}
 
 // ---- Messages ----
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === "GET_LIVE_STATUS") {
-    const elapsed = (activeTabStart && activeTabDomain)
-      ? Math.floor((Date.now() - activeTabStart) / 1000) : 0;
-    sendResponse({ domain: activeTabDomain, elapsedSeconds: elapsed });
+    // The popup adds this amount to persisted timeData; return only the
+    // pending interval, not elapsed time already stored by an alarm.
+    queueTracking(async () => {
+      const [context, state] = await Promise.all([
+        currentTrackingContext(), chrome.storage.local.get("activeTracking")
+      ]);
+      return FocusFlowTrackingCore.getLiveStatus(state, context, Date.now());
+    }).then(sendResponse).catch(() => sendResponse({ domain: null, elapsedSeconds: 0 }));
+    return true;
   }
 
   if (msg.type === "GET_BLOCKED_SITES") {
