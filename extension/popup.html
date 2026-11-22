@@ -7,6 +7,7 @@
   <title>FocusFlow — Daily workspace</title>
   <link rel="stylesheet" href="popup.css" />
   <link rel="stylesheet" href="premium-design.css" />
+  <link rel="stylesheet" href="compact-layout.css" />
 </head>
 <body>
 
@@ -21,7 +22,7 @@
   </div>
   <div class="header-actions">
     <button id="quickDarkToggle" class="quick-dark-btn" type="button" aria-label="Site dark mode" aria-pressed="false" title="Toggle dark mode for this website" disabled>
-      <span>Site dark mode</span><span class="quick-dark-switch" aria-hidden="true"></span>
+      <span>Dark mode</span><span class="quick-dark-switch" aria-hidden="true"></span>
     </button>
     <div id="totalUsage" class="total-usage" hidden>⏱ 0s today</div>
   </div>
@@ -68,9 +69,9 @@
 <!-- ===== HOME: Design 01, preserving legacy IDs and data renderers ===== -->
 <section class="tab-content active home-overview" id="tab-track" aria-label="FocusFlow daily overview">
   <div class="home-greeting">
-    <span class="home-eyebrow">YOUR DAILY WORKSPACE</span>
+    <span class="home-eyebrow">YOUR FOCUS SPACE</span>
     <h1 class="home-title">Make room for <em>focus.</em></h1>
-    <p class="home-subtitle">Find your rhythm. See where your browser time goes.</p>
+    <p class="home-subtitle">See your time. Find your flow.</p>
   </div>
   <div class="home-live-card" aria-label="Current website tracking">
     <div class="home-live-top">
@@ -84,13 +85,13 @@
       <strong id="homeTotalUsage">0s</strong>
     </div>
   </div>
-  <div class="home-section-heading"><span>QUICK ACTIONS</span><span class="home-section-note">One tap to get started</span></div>
+  <div class="home-section-heading"><span>QUICK ACTIONS</span></div>
   <div class="home-quick-grid">
     <div class="home-actions">
-      <button class="btn btn-primary" id="homeFocusShortcut" type="button">Start Smart Focus</button>
-      <button class="btn btn-ghost" id="homeTimerShortcut" data-open-group="focus" data-open-tab="pomo" type="button">Pomodoro timer</button>
-      <button class="btn btn-ghost" id="homeBlockShortcut" type="button">Blocked sites <span id="homeBlockCount"></span></button>
-      <button class="btn btn-ghost" id="homeAppearanceShortcut" data-open-group="tools" data-open-tab="dark" type="button">Website dark mode</button>
+      <button class="btn btn-primary" id="homeFocusShortcut" type="button" title="Open Smart Focus sessions">Smart Focus</button>
+      <button class="btn btn-ghost" id="homeTimerShortcut" data-open-group="focus" data-open-tab="pomo" type="button" title="Open Pomodoro timer">Pomodoro timer</button>
+      <button class="btn btn-ghost" id="homeBlockShortcut" type="button" title="Manage blocked websites">Block sites <span id="homeBlockCount"></span></button>
+      <button class="btn btn-ghost" id="homeAppearanceShortcut" data-open-group="tools" data-open-tab="dark" type="button" title="Change website dark mode">Site dark mode</button>
     </div>
   </div>
   <div class="home-legacy-data" aria-label="Time spent per website">
