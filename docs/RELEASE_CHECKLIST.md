@@ -8,6 +8,12 @@
 - [ ] `python3 scripts/package_extension.py` produces a ZIP and validates required paths.
 - [ ] Inspect package contents for secrets, backup files, user data, unwanted artifacts and version mismatch.
 
+## Per-website time regression tests
+
+- [ ] `npm run test:tracking` passes deterministic ledger tests.
+- [ ] Confirm each site's elapsed time across tab switches, background tabs, focus loss, idle and lock, service-worker suspend/restart, and Chrome restart.
+- [ ] Confirm `timeData` remains compatible with Insights, Daily Goals, coding activity, and website profile limits.
+
 ## Manual Chrome checks (required; static checks are not browser tests)
 
 - [ ] Load `extension/` in a clean Chrome desktop profile.
