@@ -18,7 +18,6 @@ test("compact stylesheet overrides desktop sidebar after premium theme", () => {
   assert.match(css,/body,\s*body\[data-theme\]\s*\{[^}]*display:\s*flex/s);
   assert.match(css,/flex-direction:\s*column/);
   assert.match(css,/width:\s*380px/);
-  assert.match(css,/max-width:\s*100vw/);
   assert.match(css,/\.workspace-nav\s*\{[^}]*grid-template-columns:\s*repeat\(5,\s*minmax\(0,\s*1fr\)\)/s);
   assert.match(css,/\.workspace-nav::before\s*\{\s*display:\s*none\s*!important;/);
   assert.match(css,/\.tab-content\s*\{[^}]*flex:\s*1\s+1\s+auto/s);
@@ -57,4 +56,12 @@ test("dashboard actions expose readable labels and working feature hooks", () =>
   assert.match(html,/id="dashboardTimerSkip"[^>]*aria-label="Skip timer phase"/);
   assert.match(html,/data-pomo-phase="longBreak"/);
   assert.match(html,/id="dashboardSpeed"[^>]*aria-label="Apply video playback speed"/);
+});
+
+test("the action popup reserves its width before Chrome establishes the viewport", () => {
+  assert.match(css, /html:not\(:has\(body\.dashboard-expanded\)\)\s*\{\s*min-width:\s*380px/);
+  const compactBody = css.match(/body,\s*body\[data-theme\]\s*\{([^}]+)\}/)[1];
+  assert.match(compactBody, /(?:^|\s)width:\s*380px/);
+  assert.doesNotMatch(compactBody, /max-width:/);
+  assert.match(dashboard, /body\.dashboard-expanded\s*\{[^}]*width:\s*min\(380px,\s*100%\)/);
 });

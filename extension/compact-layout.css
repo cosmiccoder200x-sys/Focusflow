@@ -4,10 +4,12 @@
  * room for actual tools; this stylesheet gives the content the full width.
  * Loaded AFTER premium-design.css. Presentation only; no data or API changes.
  */
-html { min-width: 0; overflow: hidden; }
+html { overflow: hidden; }
+
+/* Chrome sizes the action popup from its document before the viewport settles. */
+html:not(:has(body.dashboard-expanded)) { min-width: 380px; }
 body, body[data-theme] {
   width: 380px;
-  max-width: 100vw;
   height: 600px;
   min-height: 0;
   display: flex;
