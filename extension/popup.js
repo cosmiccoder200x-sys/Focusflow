@@ -298,6 +298,7 @@ function renderSiteList(dayData, categories, liveData) {
   if (!sorted.length) {
     list.innerHTML = '<div class="empty-state">No data yet. Start browsing!</div>'; return;
   }
+  const maxSiteSeconds = Math.max(1, Number(sorted[0]?.[1]) || 0);
   sorted.forEach(([domain, secs]) => {
     const cat = categories[domain] || "waste";
     const isStudy = cat === "study";
@@ -306,10 +307,11 @@ function renderSiteList(dayData, categories, liveData) {
     const isLive = liveData && liveData.domain === domain && selectedDate === getTodayKey();
     const liveDot = isLive ? `<span class="live-dot" style="width:5px;height:5px;margin-right:3px;flex-shrink:0"></span>` : "";
     row.innerHTML = `${liveDot}
-      <span class="site-name" title="${domain}">${domain}</span>
+      <span class="site-name" title="${escapeHtml(domain)}">${escapeHtml(domain)}</span>
+      <span class="site-meter" aria-hidden="true"><span style="width:${Math.max(3, Math.min(100, Math.round(Number(secs) / maxSiteSeconds * 100)))}%"></span></span>
       <span class="site-time">${fmtSec(secs)}</span>
       <button class="toggle-btn ${isStudy ? "study" : "waste"}" data-domain="${domain}" data-current="${cat}">
-        ${isStudy ? "📗 Study" : "📕 Waste"}
+        ${isStudy ? "Study" : "Other"}
       </button>`;
     row.querySelector(".toggle-btn").addEventListener("click", async (e) => {
       const d = e.currentTarget.dataset.domain;

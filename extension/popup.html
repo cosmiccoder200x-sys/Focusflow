@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0b0e0c" />
+  <meta name="theme-color" content="#0d1714" />
   <title>FocusFlow — Daily workspace</title>
   <link rel="stylesheet" href="popup.css" />
+  <link rel="stylesheet" href="premium-design.css" />
 </head>
 <body>
 
@@ -15,6 +16,7 @@
     <div class="brand-icon-wrap" aria-label="FocusFlow orbit mark"><svg viewBox="0 0 32 32" role="img" aria-hidden="true"><ellipse cx="16" cy="16" rx="12" ry="5.5"/><ellipse cx="16" cy="16" rx="6" ry="12" transform="rotate(38 16 16)"/><circle cx="16" cy="16" r="3.3"/><circle cx="27" cy="12" r="1.8"/></svg></div>
     <div>
       <div class="brand-name">FocusFlow</div>
+      <span class="brand-tagline">A little more focus, every day.</span>
     </div>
   </div>
   <div class="header-actions">
@@ -27,11 +29,11 @@
 
 <!-- Primary navigation: five focused workspaces -->
 <nav class="workspace-nav" aria-label="FocusFlow workspaces">
-  <button class="workspace-btn active" type="button" data-nav-group="home">Home</button>
-  <button class="workspace-btn" type="button" data-nav-group="focus">Focus</button>
-  <button class="workspace-btn" type="button" data-nav-group="tools">Tools</button>
-  <button class="workspace-btn" type="button" data-nav-group="insights">Insights</button>
-  <button class="workspace-btn" type="button" data-nav-group="settings">Settings</button>
+  <button class="workspace-btn active" type="button" data-nav-group="home" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 13l4-4 4 4M12 9v8"/></svg><span>Home</span></button>
+  <button class="workspace-btn" type="button" data-nav-group="focus" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 13l3-3M9 2h6"/></svg><span>Focus</span></button>
+  <button class="workspace-btn" type="button" data-nav-group="tools" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg><span>Tools</span></button>
+  <button class="workspace-btn" type="button" data-nav-group="insights" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V11M10 19V5M16 19v-9M22 19v-6"/></svg><span>Insights</span></button>
+  <button class="workspace-btn" type="button" data-nav-group="settings" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M20 12l-2 1 .4 2.3-2 2-.9-2.1-2.5.4-1 2.4-2.4-1-.3-2.2L7 13l-2.2-.6.5-2.5 2.2-.3.7-2.3L6.8 5.8l2.1-1.5 1.9 1.2 2.2-.4 1-2 2.4 1-.1 2.3 1.7 1.5 2.3-.1.6 2.4-2 .9z"/></svg><span>Settings</span></button>
 </nav>
 <nav class="feature-nav" aria-label="Workspace features" hidden>
   <div class="nav-group active" data-group="home">
@@ -63,18 +65,69 @@
   </div>
 </nav>
 
-<!-- ===== HOME TAB: MINIMAL OVERVIEW ===== -->
-<section class="tab-content active home-overview" id="tab-track">
-  <h1 class="home-title">Today</h1>
-  <div class="home-live-card"><div class="home-live-top"><span class="live-dot"></span><span>NOW TRACKING</span><span id="liveTime" class="home-live-time">0s</span></div><div id="liveDomain" class="home-live-domain">—</div><div class="home-live-bottom"><span>Screen time today</span><strong id="homeTotalUsage">0s</strong></div></div>
+<!-- ===== HOME: Design 01, preserving legacy IDs and data renderers ===== -->
+<section class="tab-content active home-overview" id="tab-track" aria-label="FocusFlow daily overview">
+  <div class="home-greeting">
+    <span class="home-eyebrow">YOUR DAILY WORKSPACE</span>
+    <h1 class="home-title">Make room for <em>focus.</em></h1>
+    <p class="home-subtitle">Find your rhythm. See where your browser time goes.</p>
+  </div>
+  <div class="home-live-card" aria-label="Current website tracking">
+    <div class="home-live-top">
+      <span class="live-dot" aria-hidden="true"></span>
+      <span>CURRENT WEBSITE</span>
+      <span id="liveTime" class="home-live-time" aria-live="off">0s</span>
+    </div>
+    <div id="liveDomain" class="home-live-domain">—</div>
+    <div class="home-live-bottom">
+      <span>Tracked browsing today</span>
+      <strong id="homeTotalUsage">0s</strong>
+    </div>
+  </div>
+  <div class="home-section-heading"><span>QUICK ACTIONS</span><span class="home-section-note">One tap to get started</span></div>
   <div class="home-quick-grid">
     <div class="home-actions">
-      <button class="btn btn-primary" id="homeFocusShortcut" type="button">Set up focus</button>
-      <button class="btn btn-ghost" id="homeBlockShortcut" type="button">Block list<span id="homeBlockCount"></span></button>
+      <button class="btn btn-primary" id="homeFocusShortcut" type="button">Start Smart Focus</button>
+      <button class="btn btn-ghost" id="homeTimerShortcut" data-open-group="focus" data-open-tab="pomo" type="button">Pomodoro timer</button>
+      <button class="btn btn-ghost" id="homeBlockShortcut" type="button">Blocked sites <span id="homeBlockCount"></span></button>
+      <button class="btn btn-ghost" id="homeAppearanceShortcut" data-open-group="tools" data-open-tab="dark" type="button">Website dark mode</button>
     </div>
-    <div class="home-tool-card home-speed-card"><span class="home-tool-icon">▷</span><span class="home-tool-copy"><strong>Video speed</strong><small>Choose playback rate</small></span><div class="home-speed-options"><button type="button" data-home-speed="1">1×</button><button type="button" data-home-speed="1.5">1.5×</button><button type="button" data-home-speed="2">2×</button><button type="button" data-home-speed="3">3×</button><button type="button" data-home-speed="4">4×</button></div></div>
   </div>
-  <div class="home-legacy-data" aria-hidden="true"><select id="datePicker" class="picker"></select><canvas id="chart" width="362" height="130"></canvas><canvas id="dayGraph" width="362" height="100"></canvas><div id="siteList" class="site-list"></div></div>
+  <div class="home-legacy-data" aria-label="Time spent per website">
+    <div class="usage-heading">
+      <div class="usage-text">
+        <span class="usage-kicker">YOUR BROWSING HABITS</span>
+        <h2>Where your time goes</h2>
+      </div>
+      <label class="usage-picker-label" for="datePicker">
+        Date
+        <select id="datePicker" class="picker"></select>
+      </label>
+    </div>
+    <div class="home-sites-panel">
+      <div class="home-sites-header"><strong>Websites</strong><span>Time spent per domain</span></div>
+      <div id="siteList" class="site-list"><div class="empty-state">Start browsing to see activity here.</div></div>
+    </div>
+    <details class="home-charts">
+      <summary>View daily usage charts</summary>
+      <div class="home-charts-body">
+        <div><h3>Study / other / total</h3><canvas id="chart" width="362" height="130"></canvas></div>
+        <div><h3>Seven-day activity</h3><canvas id="dayGraph" width="362" height="100"></canvas></div>
+      </div>
+    </details>
+  </div>
+  <div class="home-section-heading"><span>VIDEO CONTROLS</span><span class="home-section-note">For supported players</span></div>
+  <div class="home-tool-card home-speed-card">
+    <span class="home-tool-icon" aria-hidden="true">▷</span>
+    <span class="home-tool-copy"><strong>Playback speed</strong><small>Adjust your current page</small></span>
+    <div class="home-speed-options" aria-label="Video playback rate">
+      <button type="button" data-home-speed="1">1×</button>
+      <button type="button" data-home-speed="1.5">1.5×</button>
+      <button type="button" data-home-speed="2">2×</button>
+      <button type="button" data-home-speed="3">3×</button>
+      <button type="button" data-home-speed="4">4×</button>
+    </div>
+  </div>
 </section>
 
 <!-- ===== WEBSITE PROFILES TAB ===== -->
@@ -496,5 +549,6 @@
 <script src="popup.js"></script>
 <script src="profiles.js"></script>
 <script src="smart-focus.js"></script>
+<script src="premium-ui.js"></script>
 </body>
 </html>

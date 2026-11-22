@@ -2,48 +2,195 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="FocusFlow is an open-source Chrome extension for distraction blocking, focus sessions, tasks, and productivity insights. Install from source.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f5ed">
+  <meta name="description" content="FocusFlow is an open-source Chrome extension to block distracting websites, build focus habits, manage tasks, and understand browsing time. Install from source.">
+  <meta property="og:type" content="website">
   <meta property="og:title" content="FocusFlow — Take Back Your Attention">
-  <meta property="og:description" content="An open-source Chrome workspace for more focused browsing.">
-  <meta name="theme-color" content="#0b1210">
+  <meta property="og:description" content="A calmer way to browse. Open-source Chrome extension for focus sessions, website blocking, and productivity insights.">
   <title>FocusFlow — Take Back Your Attention</title>
   <style>
-    :root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,sans-serif;background:#0b1210;color:#edf7f0}
-    *{box-sizing:border-box}body{margin:0}a{color:inherit}header,main,footer{max-width:980px;margin:auto;padding:30px 24px}
-    header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #26352d}
-    .brand{font-weight:800;letter-spacing:.04em}nav a{font-size:14px;color:#bbd2c3}
-    .hero{padding:95px 0 55px}.eyebrow{color:#a9e8c2;font-size:13px;letter-spacing:.15em;text-transform:uppercase}
-    h1{font-size:clamp(44px,8vw,86px);line-height:1.03;letter-spacing:-.06em;margin:18px 0}
-    .lead{max-width:690px;color:#b8c8bf;font-size:20px;line-height:1.65}
-    .cta{display:inline-block;margin:22px 12px 0 0;background:#b0f5c7;color:#082015;padding:14px 22px;text-decoration:none;border-radius:12px;font-weight:750}
-    .secondary{background:#1d2c24;color:#e7f8eb}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:26px 0 50px}
-    .tile{border:1px solid #294134;border-radius:16px;padding:23px;background:#121d17}
-    h2{font-size:26px}.tile p,footer{color:#b8c8bf;line-height:1.6}
-    .note{border-left:3px solid #b0f5c7;padding:12px 18px;background:#14231a;color:#bfd4c5}
-    footer{border-top:1px solid #26352d;font-size:13px}
-    @media(max-width:720px){.grid{grid-template-columns:1fr}.hero{padding-top:55px}}
+    :root {
+      color-scheme: light;
+      --cream:#f7f5ed;
+      --paper:#fffdf6;
+      --ink:#18281e;
+      --forest:#326d46;
+      --forest-deep:#1c4c31;
+      --sage:#e8f2e6;
+      --muted:#5e7062;
+      --line:#e5e5d8;
+      --radius:21px;
+      font-family: "Segoe UI", Inter, ui-sans-serif, system-ui, sans-serif;
+      font-synthesis: none;
+      background: var(--cream);
+      color: var(--ink);
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;min-width:320px;background:radial-gradient(ellipse at 85% 4%,#e8eddd 0,transparent 42%),var(--cream)}
+    a{color:inherit;text-decoration:none}
+    a:focus-visible,summary:focus-visible{outline:3px solid #39794d;outline-offset:4px}
+    .wrap{max-width:1190px;margin:0 auto;padding:0 32px}
+    .topbar{border-bottom:1px solid rgba(36,83,49,.11);background:rgba(247,245,237,.88)}
+    .topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:83px}
+    .logo{display:inline-flex;gap:10px;align-items:center;font-size:22px;font-weight:850;letter-spacing:-.05em}
+    .logo-mark{width:36px;height:36px;display:grid;place-items:center;color:#f7fff6;background:linear-gradient(145deg,#5f9d70,#1d5a32);border-radius:12px;box-shadow:0 6px 14px #214b2c26}
+    .logo-mark svg{width:21px;height:21px}
+    .top-links{display:flex;align-items:center;gap:22px}
+    .top-links>a:not(.button){font-size:13px;color:#3e5947;font-weight:700}
+    .button{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:45px;padding:11px 17px;border-radius:13px;font-size:13px;font-weight:780;border:1px solid transparent;transition:transform .17s ease,background .17s ease,box-shadow .17s ease}
+    .button:hover{transform:translateY(-2px)}
+    .button-primary{background:#326f47;color:#fff;box-shadow:0 10px 22px #255b3530}
+    .button-primary:hover{background:#205334}
+    .button-outline{border:1px solid #cfd7c9;background:#fffdf8;color:#20412b}
+    .button-outline:hover{background:#eff3e9}
+    .button svg{width:16px;height:16px}
+    .hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:48px;align-items:center;padding-top:92px;padding-bottom:86px}
+    .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:11px;text-transform:uppercase;font-weight:820;letter-spacing:.15em;color:#286741}
+    .eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:#4c9a61;box-shadow:0 0 0 5px #d9eadb}
+    h1{font:800 clamp(50px,5.7vw,83px)/1.04 Georgia, "Times New Roman", serif;letter-spacing:-.066em;margin:23px 0}
+    h1 em{font-weight:500;color:#427e53}
+    .lead{font-size:17px;line-height:1.73;color:#4d6554;max-width:555px;margin:0 0 27px}
+    .hero-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .microcopy{font-size:12px;line-height:1.5;color:#708172;margin:17px 0 0}
+    .pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+    .pill{font-size:11px;font-weight:700;border:1px solid #dce5d8;border-radius:99px;background:#fefdf7;color:#52705b;padding:8px 12px}
+    .preview{position:relative;min-width:0}
+    .preview::before{content:"";position:absolute;inset:12% -4% 3% -9%;background:linear-gradient(145deg,#dae7d6,#eef3e8);border-radius:44px;transform:rotate(6deg)}
+    .preview-frame{position:relative;overflow:hidden;background:linear-gradient(145deg,#1c3328,#0c1913);border-radius:27px;box-shadow:0 26px 80px #20352529,0 0 0 1px #254831;min-height:400px;padding:19px}
+    .preview-top{display:flex;align-items:center;gap:6px;color:#d5f2db;font-size:11px;font-weight:750;letter-spacing:.05em}
+    .window-dot{width:9px;height:9px;border-radius:50%;background:#7cbe8e;opacity:.75}
+    .window-dot:nth-child(2){opacity:.44}.window-dot:nth-child(3){opacity:.25}
+    .preview-label{margin-left:auto;border:1px solid #54745b;padding:5px 8px;border-radius:99px;color:#c1dcca;font-size:10px}
+    .preview-img-wrap{display:grid;place-items:center;margin-top:18px;border:1px solid #365641;background:#09160f;border-radius:15px;min-height:310px;max-height:440px;overflow:hidden}
+    .preview-img-wrap img{display:block;width:100%;height:440px;object-fit:contain}
+    .preview-caption{position:relative;margin:13px 0 0;font-size:11px;color:#cbd8cd;line-height:1.5}
+    .section{padding-top:84px;padding-bottom:89px}
+    .section-head{display:flex;justify-content:space-between;gap:30px;align-items:end;margin-bottom:27px}
+    .section-label{display:block;color:#408454;letter-spacing:.16em;font-size:11px;font-weight:800;margin-bottom:13px}
+    h2{margin:0;font:750 clamp(31px,3.8vw,49px)/1.12 Georgia,serif;letter-spacing:-.045em}
+    .section-head p{max-width:330px;line-height:1.6;color:#6d8070;font-size:14px;margin:0}
+    .feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+    .feature{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:27px;min-height:190px;box-shadow:0 10px 27px #203b2020}
+    .feature-icon{display:grid;place-items:center;width:43px;height:43px;background:#ecf4e9;border-radius:14px;color:#34744b;font-size:23px;margin-bottom:18px}
+    .feature h3{margin:0 0 7px;font-size:17px;letter-spacing:-.025em}
+    .feature p{color:#68796b;font-size:13px;line-height:1.67;margin:0}
+    .band{border-top:1px solid #e4e7dd;border-bottom:1px solid #e4e7dd;background:#eaf0e5}
+    .band-inner{display:grid;grid-template-columns:1fr 1fr 1fr;gap:25px;padding-top:26px;padding-bottom:26px}
+    .band-inner div{display:flex;gap:9px;align-items:center;color:#315d3d;font-size:12px;font-weight:740}
+    .band-inner span{font-size:18px;flex:none}
+    .how{display:grid;grid-template-columns:1fr .9fr;gap:60px;align-items:start}
+    .steps{counter-reset:step;list-style:none;padding:0;margin:25px 0 0;display:grid;gap:15px}
+    .steps li{position:relative;counter-increment:step;padding:15px 18px 15px 59px;background:#fffdf7;border:1px solid var(--line);border-radius:14px;font-size:14px;line-height:1.55;color:#4b624f}
+    .steps li::before{content:counter(step);position:absolute;left:17px;top:15px;display:grid;place-items:center;width:27px;height:27px;background:#e4f2e3;color:#27633c;border-radius:9px;font-size:12px;font-weight:800}
+    .info-card{padding:29px;border-radius:24px;background:#163525;color:#f3fbf4;box-shadow:0 25px 55px #173b2930}
+    .info-card h3{margin:0 0 14px;font:700 25px Georgia,serif}
+    .info-card p{font-size:14px;color:#c9dbce;line-height:1.75}
+    .info-card .button{margin-top:9px;background:#d4f3dc;color:#173d26}
+    .notice{margin-top:30px;font-size:12px;color:#708273;line-height:1.6}
+    footer{background:#173524;color:#e3f0e5}
+    .footer-inner{padding-top:30px;padding-bottom:30px;display:flex;align-items:center;justify-content:space-between;gap:25px}
+    footer .logo{font-size:19px}
+    footer p{font-size:12px;color:#bfd4c3}
+    footer nav{display:flex;gap:22px;flex-wrap:wrap;font-size:12px;font-weight:700;color:#d3ead7}
+    @media(max-width:950px){.hero{grid-template-columns:1fr;gap:45px}.preview{max-width:610px}.feature-grid{grid-template-columns:repeat(2,1fr)}.section-head{align-items:start;flex-direction:column;gap:11px}.how{grid-template-columns:1fr 1fr;gap:20px}}
+    @media(max-width:650px){.wrap{padding-left:20px;padding-right:20px}.topbar-inner{min-height:72px}.top-links{gap:12px}.top-links>a:not(.button){display:none}.hero{padding-top:55px;padding-bottom:56px}h1{font-size:clamp(43px,11vw,68px)}.lead{font-size:15px}.section{padding-top:56px;padding-bottom:56px}.feature-grid{grid-template-columns:1fr}.feature{min-height:0}.band-inner{grid-template-columns:1fr;gap:14px}.how{grid-template-columns:1fr}.footer-inner{align-items:flex-start;flex-direction:column}.preview-img-wrap img{height:360px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
   </style>
 </head>
 <body>
-<header><span class="brand">FOCUSFLOW</span><nav><a href="https://github.com/cosmiccoder200x-sys/Focusflow">GitHub repository</a></nav></header>
-<main>
-  <section class="hero">
-    <p class="eyebrow">Open source · Chrome Manifest V3</p>
-    <h1>Take back<br>your attention.</h1>
-    <p class="lead">A Chrome productivity workspace that combines website blocking, Pomodoro sessions, tasks, and browsing insights — all in one extension.</p>
-    <a class="cta" href="https://github.com/cosmiccoder200x-sys/Focusflow#install-focusflow">Install from source</a>
-    <a class="cta secondary" href="https://github.com/cosmiccoder200x-sys/Focusflow">Explore the code</a>
-  </section>
-  <section aria-labelledby="features"><h2 id="features">One workspace. Fewer distractions.</h2>
-    <div class="grid">
-      <article class="tile"><h2>Block distractions</h2><p>Configure domains to block while you study and work.</p></article>
-      <article class="tile"><h2>Focus with intention</h2><p>Use timers, tasks and quick notes to organize your sessions.</p></article>
-      <article class="tile"><h2>Learn your habits</h2><p>Review browsing activity and productivity insights.</p></article>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="logo" href="#" aria-label="FocusFlow home">
+        <span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M5 17c0-7 7-12 15-13 0 9-4 16-13 16"/><path d="M7 20c1-5 5-9 11-12"/></svg></span>
+        <span>FocusFlow</span>
+      </a>
+      <nav class="top-links" aria-label="Main navigation">
+        <a href="#features">Features</a>
+        <a href="#install">Installation</a>
+        <a class="button button-outline" href="https://github.com/cosmiccoder200x-sys/Focusflow" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .9a11 11 0 0 0-3.48 21.44c.55.1.75-.24.75-.53v-2.06c-3.06.66-3.7-1.3-3.7-1.3-.5-1.26-1.22-1.6-1.22-1.6-1-.68.08-.67.08-.67 1.1.08 1.69 1.12 1.69 1.12.98 1.67 2.56 1.19 3.18.9.1-.71.38-1.19.69-1.46-2.45-.28-5.03-1.23-5.03-5.43 0-1.2.43-2.18 1.13-2.95-.11-.28-.5-1.4.1-2.91 0 0 .92-.3 3.02 1.12a10.5 10.5 0 0 1 5.5 0c2.1-1.42 3.02-1.12 3.02-1.12.6 1.51.21 2.63.1 2.91.7.77 1.13 1.75 1.13 2.95 0 4.21-2.59 5.15-5.05 5.42.39.34.74 1 .74 2.01v2.97c0 .3.2.64.75.53A11 11 0 0 0 12 .9Z"/></svg>
+          View GitHub
+        </a>
+      </nav>
     </div>
-  </section>
-  <p class="note">Source-install preview. No Chrome Web Store listing or published release is implied. Screenshots and live browser testing are pending.</p>
-</main>
-<footer>FocusFlow · <a href="https://github.com/cosmiccoder200x-sys/Focusflow/blob/main/docs/PRIVACY.md">Privacy overview</a> · <a href="https://github.com/cosmiccoder200x-sys/Focusflow">Source code</a></footer>
-</body></html>
+  </header>
+  <main>
+    <section class="wrap hero" aria-labelledby="hero-title">
+      <div>
+        <span class="eyebrow">An open-source Chrome productivity workspace</span>
+        <h1 id="hero-title">Take back your <em>attention.</em></h1>
+        <p class="lead">Less tab hopping. More meaningful work. FocusFlow brings website blocking, focused sessions, quick tasks, and real browsing insights into one calm Chrome extension.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="https://github.com/cosmiccoder200x-sys/Focusflow/blob/main/docs/INSTALLATION.md">Install from source <span aria-hidden="true">↗</span></a>
+          <a class="button button-outline" href="https://github.com/cosmiccoder200x-sys/Focusflow">Explore the source</a>
+        </div>
+        <p class="microcopy">Chrome desktop · Manifest V3 · Source installation only · No Chrome Web Store listing claimed</p>
+        <div class="pill-row" aria-label="Product attributes">
+          <span class="pill">Open source</span><span class="pill">Deep work</span><span class="pill">Website controls</span><span class="pill">Productivity insights</span>
+        </div>
+      </div>
+      <aside class="preview" aria-label="Existing FocusFlow screenshot">
+        <div class="preview-frame">
+          <div class="preview-top"><span class="window-dot"></span><span class="window-dot"></span><span class="window-dot"></span><span class="preview-label">Real repository image</span></div>
+          <div class="preview-img-wrap"><img loading="lazy" src="https://github.com/user-attachments/assets/07ac7328-c6e8-4f08-bc9a-07965ebd0bae" alt="Previously captured FocusFlow extension screenshot from the repository" width="520" height="742"></div>
+          <p class="preview-caption">Existing project screenshot (captured before Design 01); replace with a genuine updated screenshot after browser verification.</p>
+        </div>
+      </aside>
+    </section>
+    <div class="band" aria-label="Product characteristics">
+      <div class="wrap band-inner">
+        <div><span aria-hidden="true">◎</span> Built for everyday deep work</div>
+        <div><span aria-hidden="true">◌</span> Local data for core features</div>
+        <div><span aria-hidden="true">◇</span> Inspectable open-source code</div>
+      </div>
+    </div>
+    <section id="features" class="wrap section" aria-labelledby="features-heading">
+      <div class="section-head">
+        <div><span class="section-label">EVERYTHING IN ONE WORKSPACE</span><h2 id="features-heading">Build a calmer browser.</h2></div>
+        <p>Focused tools without making the process of staying focused feel like another task.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature"><div class="feature-icon" aria-hidden="true">⊘</div><h3>Website blocking</h3><p>Choose distracting domains to block and help protect the time you set aside.</p></article>
+        <article class="feature"><div class="feature-icon" aria-hidden="true">◷</div><h3>Focus &amp; Pomodoro</h3><p>Use configurable work and break sessions to build a consistent routine.</p></article>
+        <article class="feature"><div class="feature-icon" aria-hidden="true">▥</div><h3>Browsing time</h3><p>See tracked time by website and review activity patterns from local browser data.</p></article>
+        <article class="feature"><div class="feature-icon" aria-hidden="true">☑</div><h3>Tasks &amp; notes</h3><p>Keep small commitments and quick notes close to your focus tools.</p></article>
+        <article class="feature"><div class="feature-icon" aria-hidden="true">▷</div><h3>Media playback</h3><p>Change playback speed on supported video and audio players.</p></article>
+        <article class="feature"><div class="feature-icon" aria-hidden="true">☾</div><h3>Website dark mode</h3><p>Use global or per-site appearance controls where supported.</p></article>
+      </div>
+    </section>
+    <section id="install" class="wrap section how" aria-labelledby="install-heading">
+      <div>
+        <span class="section-label">GET STARTED</span>
+        <h2 id="install-heading">Four steps to focus.</h2>
+        <ol class="steps">
+          <li>Download and extract the source repository ZIP.</li>
+          <li>Open <code>chrome://extensions</code> in Chrome desktop.</li>
+          <li>Enable Developer mode and choose <strong>Load unpacked</strong>.</li>
+          <li>Select the extracted <code>extension/</code> folder containing <code>manifest.json</code>.</li>
+        </ol>
+        <p class="notice">Browser permission prompts are expected for website controls and tracking. Read the permission explanation before installing.</p>
+      </div>
+      <aside class="info-card">
+        <h3>Your focus is yours to shape.</h3>
+        <p>FocusFlow stores core activity data using Chrome extension storage. Optional backend syncing is separate and requires your configuration. Browsing time is an estimate of active browser use, not a measure of attention.</p>
+        <a class="button" href="https://github.com/cosmiccoder200x-sys/Focusflow/blob/main/docs/PRIVACY.md">Explore privacy &amp; permissions <span aria-hidden="true">↗</span></a>
+        <p>Have feedback? Open an issue or send a focused pull request. Contributions are welcome.</p>
+        <a href="https://github.com/cosmiccoder200x-sys/Focusflow/issues" style="color:#c4f2ce;text-decoration:underline;font-size:13px">Give feedback on GitHub</a>
+      </aside>
+    </section>
+  </main>
+  <footer>
+    <div class="wrap footer-inner">
+      <div><span class="logo">FocusFlow</span><p>Take back your attention. One focused session at a time.</p></div>
+      <nav aria-label="Footer links">
+        <a href="https://github.com/cosmiccoder200x-sys/Focusflow">Source</a>
+        <a href="https://github.com/cosmiccoder200x-sys/Focusflow/blob/main/README.md">Documentation</a>
+        <a href="https://github.com/cosmiccoder200x-sys/Focusflow/blob/main/SECURITY.md">Security</a>
+        <a href="https://github.com/cosmiccoder200x-sys/Focusflow/blob/main/LICENSE">License</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

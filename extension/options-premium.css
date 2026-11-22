@@ -1,0 +1,43 @@
+/* Design 01 — unified settings look; leaves settings logic untouched. */
+:root { color-scheme:dark; }
+body {
+  background:radial-gradient(circle at 88% -5%,rgba(88,148,100,.15),transparent 40%),#0c1711;
+  color:#eff7ef;
+  font-family:Inter,"Segoe UI",system-ui,sans-serif;
+  padding:clamp(20px,5vw,46px) 20px;
+}
+.container {
+  max-width:660px;
+  padding:clamp(23px,5vw,43px);
+  background:#14251b;
+  border:1px solid rgba(190,232,199,.19);
+  border-radius:24px;
+  box-shadow:0 25px 65px rgba(0,0,0,.32);
+}
+h1{font-size:clamp(21px,4vw,28px);color:#f5fcf5;letter-spacing:-.035em}
+.subtitle{color:#b9cdbd;font-size:13px;line-height:1.6}
+.field label{color:#d5e8d7;letter-spacing:.07em}
+input[type="text"],input[type="password"] {
+  min-height:46px;
+  background:#0d1b14;
+  border:1px solid rgba(186,220,195,.25);
+  color:#f3fbf3;
+  border-radius:12px;
+}
+input[type="text"]:focus,input[type="password"]:focus {
+  border-color:#a1e6b3;
+  outline:2px solid rgba(161,230,179,.23);
+}
+.hint{color:#9fb7a4;line-height:1.6}
+.btn-primary{background:#b3eac2;color:#102217;border-radius:11px;font-weight:750}
+.btn-primary:hover{background:#d0f4d8}
+.btn-secondary{background:#22392a;border-color:#3a5841;color:#e0efe2;border-radius:11px}
+.btn-secondary:hover{background:#2e4935}
+button:focus-visible,.switch input:focus-visible + .slider{outline:3px solid #b8efd0;outline-offset:3px}
+.switch input:checked + .slider{background:#46865b}
+.toggle-row,.sync-info,.security-note{background:#1a3023;border-color:rgba(190,232,199,.18);border-radius:13px}
+.sync-info h3{color:#eef7ee}
+.security-note{color:#b4cbb8;line-height:1.65}
+.status.info{background:#193126;border-color:#4b7554;color:#bcdfbf}
+.status.success{background:#193a28;border-color:#528c61;color:#d0f6d5}
+.status.error{background:#391f1f;border-color:#8f4a4a;color:#ffbdbd}
