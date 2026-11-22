@@ -5,11 +5,32 @@
 // TAB NAVIGATION
 // =============================================
 
+const expandedDashboard = new URLSearchParams(location.search).has("dashboard");
+document.body.classList.toggle("dashboard-expanded", expandedDashboard);
+document.getElementById("openDashboard").addEventListener("click", async () => {
+  const [opener] = await chrome.tabs.query({ active: true, currentWindow: true });
+  await chrome.tabs.create({ url: chrome.runtime.getURL("popup.html?dashboard"), openerTabId: opener?.id });
+});
+
+async function currentWebsiteTab() {
+  if (expandedDashboard) {
+    const tab = await chrome.tabs.getCurrent();
+    if (tab?.openerTabId == null) return null;
+    return chrome.tabs.get(tab.openerTabId).catch(() => null);
+  }
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  return tab;
+}
+
 function activateFeatureTab(btn) {
   if (!btn) return;
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".tab-content").forEach(s => s.classList.remove("active"));
   btn.classList.add("active");
+  document.querySelectorAll(".sidebar-shortcut").forEach(shortcut => {
+    if (shortcut.dataset.openTab === btn.dataset.tab) shortcut.setAttribute("aria-current", "page");
+    else shortcut.removeAttribute("aria-current");
+  });
   const panel = document.getElementById("tab-" + btn.dataset.tab);
   if (panel) panel.classList.add("active");
   // Keep the original lazy-render behaviour for analytics panels.
@@ -91,7 +112,7 @@ function cssVar(name) {
 }
 
 function escapeHtml(str) {
-  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  return String(str ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
 const CODING_SITES = ["leetcode.com","codeforces.com","codechef.com","hackerrank.com","github.com","geeksforgeeks.org"];
@@ -104,9 +125,10 @@ const CAT_COLORS = {
 // TRACK TAB (fully preserved from v3.0)
 // =============================================
 
-let liveInterval = null;
-let selectedDate = getTodayKey();
+let dashboardDay = getTodayKey();
+let selectedDate = dashboardDay;
 let lastLive = null;
+let trackingRequestPending = false;
 
 function buildDatePicker() {
   const picker = document.getElementById("datePicker");
@@ -118,10 +140,7 @@ function buildDatePicker() {
     opt.textContent = i === 0 ? "Today" : i === 1 ? "Yesterday" : key;
     picker.appendChild(opt);
   }
-  picker.addEventListener("change", () => {
-    selectedDate = picker.value;
-    renderTrack(lastLive);
-  });
+  picker.value = selectedDate;
 }
 
 function drawChart(studySec, wasteSec, totalSec) {
@@ -199,7 +218,7 @@ function drawChart(studySec, wasteSec, totalSec) {
   });
 }
 
-async function drawDayGraph(liveData) {
+function drawDayGraph(timeData, cats) {
   const canvas = document.getElementById("dayGraph");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
@@ -215,17 +234,10 @@ async function drawDayGraph(liveData) {
   ctx.fillStyle = cBg2;
   ctx.fillRect(0, 0, W, H);
 
-  const r = await chrome.storage.local.get(["timeData", "siteCategories"]);
-  const timeData = r.timeData || {};
-  const cats = r.siteCategories || {};
-
   const days = [];
   for (let i = 6; i >= 0; i--) {
     const key = getDateKey(i);
-    const dayData = { ...(timeData[key] || {}) };
-    if (i === 0 && liveData && liveData.domain) {
-      dayData[liveData.domain] = (dayData[liveData.domain] || 0) + (liveData.elapsedSeconds || 0);
-    }
+    const dayData = timeData[key] || {};
     let total = 0, study = 0;
     Object.entries(dayData).forEach(([dom, secs]) => {
       total += secs;
@@ -289,12 +301,7 @@ async function drawDayGraph(liveData) {
 function renderSiteList(dayData, categories, liveData) {
   const list = document.getElementById("siteList");
   list.innerHTML = "";
-  let display = { ...dayData };
-  if (liveData && liveData.domain && selectedDate === getTodayKey()) {
-    const d = liveData.domain;
-    display[d] = (display[d] || 0) + (liveData.elapsedSeconds || 0);
-  }
-  const sorted = Object.entries(display).sort((a, b) => b[1] - a[1]);
+  const sorted = Object.entries(dayData).sort((a, b) => b[1] - a[1]);
   if (!sorted.length) {
     list.innerHTML = '<div class="empty-state">No data yet. Start browsing!</div>'; return;
   }
@@ -310,7 +317,7 @@ function renderSiteList(dayData, categories, liveData) {
       <span class="site-name" title="${escapeHtml(domain)}">${escapeHtml(domain)}</span>
       <span class="site-meter" aria-hidden="true"><span style="width:${Math.max(3, Math.min(100, Math.round(Number(secs) / maxSiteSeconds * 100)))}%"></span></span>
       <span class="site-time">${fmtSec(secs)}</span>
-      <button class="toggle-btn ${isStudy ? "study" : "waste"}" data-domain="${domain}" data-current="${cat}">
+      <button class="toggle-btn ${isStudy ? "study" : "waste"}" data-domain="${escapeHtml(domain)}" data-current="${isStudy ? "study" : "waste"}">
         ${isStudy ? "Study" : "Other"}
       </button>`;
     row.querySelector(".toggle-btn").addEventListener("click", async (e) => {
@@ -321,52 +328,81 @@ function renderSiteList(dayData, categories, liveData) {
       const cats = r.siteCategories || {};
       cats[d] = next;
       await chrome.storage.local.set({ siteCategories: cats });
-      renderTrack(lastLive);
+      await refreshTracking(true);
     });
     list.appendChild(row);
   });
 }
 
-async function renderTrack(liveData) {
-  const r = await chrome.storage.local.get(["timeData", "siteCategories"]);
-  const timeData = r.timeData || {};
-  const cats = r.siteCategories || {};
-  const dayData = timeData[selectedDate] || {};
-  let display = { ...dayData };
-  if (liveData && liveData.domain && selectedDate === getTodayKey()) {
-    const d = liveData.domain;
-    display[d] = (display[d] || 0) + (liveData.elapsedSeconds || 0);
+function usageTotals(dayData, categories) {
+  let total = 0, study = 0;
+  for (const [domain, value] of Object.entries(dayData || {})) {
+    const seconds = Number(value) || 0;
+    total += seconds;
+    if (categories[domain] === "study") study += seconds;
   }
-  let studySec = 0, wasteSec = 0;
-  Object.entries(display).forEach(([domain, secs]) => {
-    if ((cats[domain] || "waste") === "study") studySec += secs;
-    else wasteSec += secs;
-  });
-  const totalSec = studySec + wasteSec;
-  document.getElementById("totalUsage").textContent = "⏱ " + fmtSec(totalSec);
-  const homeUsage = document.getElementById("homeTotalUsage");
-  if (homeUsage) homeUsage.textContent = fmtSec(totalSec);
-  drawChart(studySec, wasteSec, totalSec);
-  await drawDayGraph(liveData);
-  renderSiteList(dayData, cats, liveData);
+  return { total, study };
 }
 
-function startLive() {
-  if (liveInterval) return;
-  liveInterval = setInterval(async () => {
-    try {
-      const resp = await chrome.runtime.sendMessage({ type: "GET_LIVE_STATUS" });
-      lastLive = resp;
-      document.getElementById("liveDomain").textContent = resp.domain || "—";
-      document.getElementById("liveTime").textContent   = fmtSec(resp.elapsedSeconds);
-      renderTrack(resp);
-    } catch {}
-  }, 1000);
+function renderTrack(snapshot, refreshList = false) {
+  const { timeData = {}, siteCategories = {} } = snapshot || {};
+  const today = usageTotals(timeData[dashboardDay], siteCategories);
+  const dayData = timeData[selectedDate] || {};
+  const day = usageTotals(dayData, siteCategories);
+  document.getElementById("dashboardFocus").textContent = fmtSec(today.study);
+  document.getElementById("homeTotalUsage").textContent = fmtSec(today.total);
+  document.getElementById("dashboardFocusRate").textContent = today.total
+    ? Math.round(today.study / today.total * 100) + "%" : "—";
+  document.getElementById("liveDomain").textContent = snapshot?.domain || "No active website";
+  document.getElementById("liveTime").textContent = snapshot?.domain ? fmtSec(snapshot.elapsedSeconds) : "";
+  document.getElementById("dashboardUsageTitle").textContent =
+    selectedDate === dashboardDay ? "Today’s Website Usage" : "Website Usage";
+  document.getElementById("dashboardUsageTotal").textContent = fmtSec(day.total);
+  document.getElementById("dashboardUsageRing").style.setProperty("--progress",
+    day.total ? day.study / day.total * 100 + "%" : "0%");
+  drawChart(day.study, day.total - day.study, day.total);
+  drawDayGraph(timeData, siteCategories);
+  // Keep keyboard focus on the classification button while the dashboard updates.
+  const active = document.activeElement;
+  if (refreshList || !document.getElementById("siteList").contains(active)) {
+    const domain = active?.matches("#siteList .toggle-btn") ? active.dataset.domain : null;
+    renderSiteList(dayData, siteCategories, snapshot);
+    if (domain) document.querySelectorAll("#siteList .toggle-btn").forEach(button => {
+      if (button.dataset.domain === domain) button.focus();
+    });
+  }
+}
+
+async function refreshTracking(refreshList = false) {
+  if (trackingRequestPending) return;
+  trackingRequestPending = true;
+  try {
+    const snapshot = await chrome.runtime.sendMessage({ type: "GET_TRACKING_SNAPSHOT" });
+    if (!snapshot?.timeData) return;
+    const today = getTodayKey();
+    if (dashboardDay !== today) {
+      if (selectedDate === dashboardDay) selectedDate = today;
+      dashboardDay = today;
+      buildDatePicker();
+      selectedDate = document.getElementById("datePicker").value || today;
+      document.getElementById("datePicker").value = selectedDate;
+    }
+    lastLive = snapshot;
+    renderTrack(snapshot, refreshList);
+  } catch (error) {
+    console.warn("FocusFlow could not refresh tracking:", error);
+  } finally {
+    trackingRequestPending = false;
+  }
 }
 
 buildDatePicker();
-renderTrack(null);
-startLive();
+document.getElementById("datePicker").addEventListener("change", event => {
+  selectedDate = event.target.value;
+  renderTrack(lastLive, true);
+});
+refreshTracking();
+setInterval(refreshTracking, 1000);
 
 // =============================================
 // BLOCK TAB (preserved)
@@ -379,7 +415,7 @@ async function loadBlockList() {
   try { resp = await chrome.runtime.sendMessage({ type: "GET_BLOCKED_SITES" }); }
   catch { return; }
   const sites = resp?.sites || [];
-  document.getElementById("homeBlockCount").textContent = " (" + sites.length + ")";
+  document.getElementById("homeBlockCount").textContent = `${sites.length} ${sites.length === 1 ? "site" : "sites"} in block list`;
   if (!sites.length) {
     list.innerHTML = '<li style="padding:10px;color:var(--text3);font-size:11px;font-family:monospace">No sites blocked.</li>';
     return;
@@ -387,7 +423,7 @@ async function loadBlockList() {
   sites.forEach(site => {
     const li = document.createElement("li");
     li.className = "block-item";
-    li.innerHTML = `<span>${site}</span><button class="rm-btn" data-site="${site}">Remove</button>`;
+    li.innerHTML = `<span>${escapeHtml(site)}</span><button class="rm-btn">Remove</button>`;
     li.querySelector(".rm-btn").addEventListener("click", async () => {
       const newSites = sites.filter(s => s !== site);
       await chrome.runtime.sendMessage({ type: "SET_BLOCKED_SITES", sites: newSites });
@@ -399,13 +435,24 @@ async function loadBlockList() {
 
 document.getElementById("addBlockBtn").addEventListener("click", async () => {
   const inp = document.getElementById("blockInput");
-  const val = inp.value.trim().toLowerCase().replace(/^www\./, "").replace(/\/.*$/, "");
-  if (!val || !val.includes(".")) return;
+  const input = inp.value.trim();
+  let val;
+  try {
+    const url = new URL(input.includes("://") ? input : "https://" + input);
+    if (!["http:", "https:"].includes(url.protocol) || url.username || url.password ||
+        !/^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/i.test(url.hostname)) throw new Error();
+    val = url.hostname.replace(/^www\./, "");
+  } catch {
+    inp.setCustomValidity("Enter a website domain such as instagram.com.");
+    inp.reportValidity();
+    return;
+  }
   const resp = await chrome.runtime.sendMessage({ type: "GET_BLOCKED_SITES" });
   const sites = resp.sites || [];
   if (!sites.includes(val)) { sites.push(val); await chrome.runtime.sendMessage({ type: "SET_BLOCKED_SITES", sites }); }
   inp.value = ""; loadBlockList();
 });
+document.getElementById("blockInput").addEventListener("input", event => event.target.setCustomValidity(""));
 document.getElementById("blockInput").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("addBlockBtn").click(); });
 loadBlockList();
 
@@ -427,16 +474,20 @@ document.querySelectorAll(".preset-btn").forEach(btn => btn.addEventListener("cl
   updateSpeedDisplay(spd);
   document.querySelectorAll(".preset-btn").forEach(b => b.classList.toggle("active", b === btn));
 }));
-async function applySelectedSpeed() {
+async function applySelectedSpeed(status = speedStatus) {
   const spd = Math.min(4, Math.max(0.25, parseFloat(slider.value) || 1));
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab || !tab.id || !tab.url || /^(chrome|edge|about):/.test(tab.url)) throw new Error("This page does not allow playback controls.");
+    const tab = await currentWebsiteTab();
+    if (!isSupportedPage(tab)) throw new Error("Open FocusFlow from a website to change playback speed.");
     await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: (rate) => {
       const applyRate = media => { if (media instanceof HTMLMediaElement) try { media.playbackRate = rate; media.defaultPlaybackRate = rate; } catch (_) {} };
       document.querySelectorAll("video, audio").forEach(applyRate);
-      document.addEventListener("play", event => applyRate(event.target), true);
-      document.addEventListener("loadedmetadata", event => applyRate(event.target), true);
+      window.__focusFlowSpeedEvents?.abort();
+      const events = new AbortController();
+      const options = { capture: true, signal: events.signal };
+      document.addEventListener("play", event => applyRate(event.target), options);
+      document.addEventListener("loadedmetadata", event => applyRate(event.target), options);
+      window.__focusFlowSpeedEvents = events;
       const observer = new MutationObserver(records => { for (const record of records) for (const node of record.addedNodes) {
         if (node.nodeType !== 1) continue;
         if (node.matches?.("video, audio")) applyRate(node);
@@ -447,19 +498,20 @@ async function applySelectedSpeed() {
       window.__focusFlowSpeedObserver = observer;
       window.__focusFlowPlaybackRate = rate;
     }, args: [spd] });
-    if (speedStatus) speedStatus.textContent = `Applied ${spd}× to this page. New videos will use the same speed.`;
+    status.textContent = `Applied ${spd}× to this page. New videos will use the same speed.`;
   } catch(e) {
-    if (speedStatus) speedStatus.textContent = e.message || "Could not control playback on this page.";
+    status.textContent = e.message || "Could not control playback on this page.";
     console.warn("Speed inject failed:", e.message);
   }
 }
-document.getElementById("applySpeed").addEventListener("click", applySelectedSpeed);
-document.querySelectorAll("[data-home-speed]").forEach(btn => btn.addEventListener("click", () => {
-  const rate = Math.min(4, Number(btn.dataset.homeSpeed));
-  slider.value = String(rate); updateSpeedDisplay(rate);
-  document.querySelectorAll(".preset-btn").forEach(b => b.classList.toggle("active", Number(b.dataset.speed) === rate));
-  applySelectedSpeed();
-}));
+document.getElementById("applySpeed").addEventListener("click", () => applySelectedSpeed());
+document.getElementById("dashboardSpeed").addEventListener("change", async event => {
+  const rate = Number(event.target.value);
+  updateSpeedDisplay(rate);
+  document.querySelectorAll(".preset-btn").forEach(button => button.classList.toggle("active", Number(button.dataset.speed) === rate));
+  await applySelectedSpeed(document.getElementById("dashboardSpeedStatus"));
+  event.target.value = "";
+});
 document.getElementById("homeFocusShortcut").addEventListener("click", () => {
   document.querySelector('[data-nav-group="focus"]').click();
   document.getElementById("smartFocusTitle").focus();
@@ -497,15 +549,19 @@ function playAlarm(type) {
 
 async function loadPomoHistory() {
   const histEl = document.getElementById("pomoHistory");
-  const r = await chrome.storage.local.get("pomoHistory");
-  const history = r.pomoHistory || {};
-  const items = history[getTodayKey()] || [];
+  const { pomoHistory = {}, dailyPomoCount } = await chrome.storage.local.get(["pomoHistory", "dailyPomoCount"]);
+  const items = pomoHistory[getTodayKey()] || [];
+  const sessions = dailyPomoCount?.[getTodayKey()] ?? items.filter(item => item.phase === "study").length;
+  document.getElementById("dashboardSessionCount").textContent = `${sessions} ${sessions === 1 ? "session" : "sessions"} today`;
+  document.querySelectorAll("#dashboardSessionProgress i").forEach((segment, index) => {
+    segment.classList.toggle("complete", index < (sessions ? (sessions - 1) % 4 + 1 : 0));
+  });
   if (!items.length) { histEl.innerHTML = '<div class="empty-state">No sessions yet today.</div>'; return; }
   histEl.innerHTML = items.map(item => `
     <div class="pomo-hist-item">
       <span class="ph-type ${item.phase}">${item.phase === "study" ? "📗 Study" : "☕ Break"}</span>
       <span>completed</span>
-      <span class="ph-time">${item.time}</span>
+      <span class="ph-time">${escapeHtml(item.time)}</span>
     </div>`).join("");
 }
 
@@ -513,15 +569,29 @@ function updatePomoUI() {
   const min = String(Math.floor(pomoUI.remaining / 60)).padStart(2, "0");
   const sec = String(pomoUI.remaining % 60).padStart(2, "0");
   document.getElementById("pomoTime").textContent  = `${min}:${sec}`;
-  document.getElementById("pomoLabel").textContent = pomoUI.phase === "study" ? "STUDY" : "BREAK";
-  const total  = pomoUI.phase === "study" ? (pomoUI.studySec || 25*60) : (pomoUI.breakSec || 5*60);
+  const phaseLabel = { study: "Focus session", break: "Short break", longBreak: "Long break" }[pomoUI.phase];
+  document.getElementById("pomoLabel").textContent = phaseLabel;
+  document.getElementById("dashboardClock").textContent = `${min}:${sec}`;
+  document.getElementById("dashboardTimerPhase").textContent = phaseLabel;
+  const total = pomoUI.phase === "study" ? pomoUI.studySec : pomoUI.phase === "longBreak" ? 15 * 60 : pomoUI.breakSec;
+  document.getElementById("dashboardTimerRing").style.setProperty("--progress",
+    Math.min(100, pomoUI.remaining / total * 100) + "%");
+  document.getElementById("homeTimerShortcut").firstChild.nodeValue =
+    `Pomodoro (${pomoUI.studySec / 60} / ${pomoUI.breakSec / 60}) `;
+  document.querySelectorAll("[data-pomo-phase]").forEach(button => {
+    button.disabled = pomoUI.running;
+    button.setAttribute("aria-pressed", String(button.dataset.pomoPhase === pomoUI.phase));
+  });
   const offset = RING_CIRCUM * (pomoUI.remaining / total);
   const ring   = document.getElementById("ringProgress");
   ring.style.strokeDashoffset = RING_CIRCUM - offset;
   ring.style.stroke = pomoUI.phase === "study" ? (cssVar("--gold") || "#c9a84c") : (cssVar("--green") || "#4caf82");
-  const total2 = pomoUI.phase === "study" ? (pomoUI.studySec || 25*60) : (pomoUI.breakSec || 5*60);
-  document.getElementById("pomoStart").textContent = pomoUI.running
-    ? "⏸ Pause" : (pomoUI.remaining < total2 ? "▶ Resume" : "▶ Start");
+  const action = pomoUI.running ? "Pause" : pomoUI.remaining < total ? "Resume" : "Start";
+  const icon = pomoUI.running ? "⏸" : "▶";
+  document.getElementById("pomoStart").textContent = `${icon} ${action}`;
+  const dashboardStart = document.getElementById("dashboardTimerStart");
+  dashboardStart.textContent = icon;
+  dashboardStart.setAttribute("aria-label", action + " timer");
   if (!pomoUI.running) {
     document.getElementById("studyMinInput").value = Math.round((pomoUI.studySec || 25*60) / 60);
     document.getElementById("breakMinInput").value = Math.round((pomoUI.breakSec || 5*60) / 60);
@@ -542,15 +612,15 @@ function stopTick() {
 
 function applyPomoState(state) {
   const prevPhase = pomoUI.phase, wasRunning = pomoUI.running;
+  if (!state || state.ok === false) return;
   pomoUI = { ...state };
   if (pomoUI.running && pomoUI.endTime) {
     pomoUI.remaining = Math.max(0, Math.round((pomoUI.endTime - Date.now()) / 1000));
     startTick();
   } else { stopTick(); }
   updatePomoUI();
-  if (wasRunning && !pomoUI.running) {
-    document.getElementById("pomoStatus").textContent =
-      prevPhase === "study" ? "✅ Study complete! Take a break." : "⏰ Break over! Back to work.";
+  if (wasRunning && !pomoUI.running && prevPhase !== pomoUI.phase && pomoUI.completedAt) {
+    setPomoStatus(prevPhase === "study" ? "Study complete. Take a break." : "Break complete.");
     playAlarm(prevPhase); loadPomoHistory();
   }
 }
@@ -559,35 +629,52 @@ async function syncPomoState() {
   try { const state = await chrome.runtime.sendMessage({ type: "POMO_GET_STATE" }); applyPomoState(state); } catch {}
 }
 
-document.getElementById("pomoStart").addEventListener("click", async () => {
-  if (pomoUI.running) {
-    const state = await chrome.runtime.sendMessage({ type: "POMO_PAUSE" });
-    applyPomoState(state); document.getElementById("pomoStatus").textContent = "Paused.";
-  } else {
-    const state = await chrome.runtime.sendMessage({ type: "POMO_START" });
-    applyPomoState(state); document.getElementById("pomoStatus").textContent = "";
+function setPomoStatus(message) {
+  document.getElementById("pomoStatus").textContent = message;
+  document.getElementById("dashboardTimerStatus").textContent = message;
+}
+
+let timerRequestPending = false;
+async function sendTimerCommand(type, options = {}, message = "") {
+  if (timerRequestPending) return;
+  timerRequestPending = true;
+  try {
+    const state = await chrome.runtime.sendMessage({ type, ...options });
+    if (!state || state.ok === false) throw new Error(state?.reason || "Timer is unavailable.");
+    applyPomoState(state);
+    setPomoStatus(message);
+  } catch (error) {
+    setPomoStatus(error.message);
+  } finally {
+    timerRequestPending = false;
   }
-});
+}
 
-document.getElementById("pomoReset").addEventListener("click", async () => {
-  const state = await chrome.runtime.sendMessage({ type: "POMO_RESET" });
-  applyPomoState(state); document.getElementById("pomoStatus").textContent = "";
-});
+function toggleTimer() {
+  if (pomoUI.running) return sendTimerCommand("POMO_PAUSE", {}, "Paused.");
+  return sendTimerCommand("POMO_START");
+}
 
-document.getElementById("applyDurBtn").addEventListener("click", async () => {
-  if (pomoUI.running) { document.getElementById("pomoStatus").textContent = "⚠ Stop timer before changing duration."; return; }
-  const studyMin = parseInt(document.getElementById("studyMinInput").value) || 25;
-  const breakMin = parseInt(document.getElementById("breakMinInput").value) || 5;
-  const state = await chrome.runtime.sendMessage({ type: "POMO_SET_DURATIONS", studySec: Math.max(1, studyMin)*60, breakSec: Math.max(1, breakMin)*60 });
-  applyPomoState(state);
-  document.getElementById("pomoStatus").textContent = `✓ Set: ${studyMin}m study / ${breakMin}m break`;
-  setTimeout(() => { document.getElementById("pomoStatus").textContent = ""; }, 2500);
+for (const id of ["pomoStart", "dashboardTimerStart"]) {
+  document.getElementById(id).addEventListener("click", toggleTimer);
+}
+for (const id of ["pomoReset", "dashboardTimerReset"]) {
+  document.getElementById(id).addEventListener("click", () => sendTimerCommand("POMO_RESET"));
+}
+document.getElementById("dashboardTimerSkip").addEventListener("click", () => sendTimerCommand("POMO_SKIP"));
+document.querySelectorAll("[data-pomo-phase]").forEach(button => {
+  button.addEventListener("click", () => sendTimerCommand("POMO_SELECT_PHASE", { phase: button.dataset.pomoPhase }));
+});
+document.getElementById("applyDurBtn").addEventListener("click", () => {
+  const studyMin = Number(document.getElementById("studyMinInput").value);
+  const breakMin = Number(document.getElementById("breakMinInput").value);
+  sendTimerCommand("POMO_SET_DURATIONS", { studySec: studyMin * 60, breakSec: breakMin * 60 }, "Durations saved.");
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "local") return;
-  if (changes.pomoState)   applyPomoState(changes.pomoState.newValue);
-  if (changes.pomoHistory) loadPomoHistory();
+  if (changes.pomoState) changes.pomoState.newValue ? applyPomoState(changes.pomoState.newValue) : syncPomoState();
+  if (changes.pomoHistory || changes.dailyPomoCount) loadPomoHistory();
 });
 
 syncPomoState(); loadPomoHistory();
@@ -623,43 +710,6 @@ async function loadTasks() {
 }
 async function saveTasks(tasks) { await chrome.storage.local.set({ tasks }); }
 
-async function syncTaskBlocking() {
-  const tasks = await loadTasks();
-  const hasPending = tasks.some(t => !t.done);
-  const r = await chrome.storage.local.get(["blockedSites", "taskBlockedSites"]);
-  const blockedSites = r.blockedSites || [];
-  const taskBlockedSites = r.taskBlockedSites || [];
-  if (hasPending) {
-    if (taskBlockedSites.length === 0) await chrome.storage.local.set({ taskBlockedSites: blockedSites });
-    const activeSites = blockedSites.length > 0 ? blockedSites : taskBlockedSites;
-    if (activeSites.length > 0) chrome.runtime.sendMessage({ type: "SET_BLOCKED_SITES", sites: activeSites });
-  }
-  updateTasksBlockUI(hasPending, tasks);
-}
-
-function updateTasksBlockUI(hasPending, tasks) {
-  const statusEl = document.getElementById("tasksBlockStatus");
-  const hintEl   = document.getElementById("taskHint");
-  const emptyEl  = document.getElementById("taskEmpty");
-  const listEl   = document.getElementById("taskList");
-  if (!statusEl) return;
-  const allDone = tasks.length > 0 && !hasPending;
-  const noTasks = tasks.length === 0;
-  if (noTasks) {
-    statusEl.textContent = "🟢 No Tasks — Sites Free"; statusEl.className = "tasks-block-status tasks-free";
-    hintEl.style.display = "none"; emptyEl.style.display = "block"; listEl.style.display = "none";
-  } else if (allDone) {
-    statusEl.textContent = "🟢 All Done — Sites Unblocked!"; statusEl.className = "tasks-block-status tasks-free";
-    hintEl.textContent = "Great work! All tasks complete."; hintEl.style.display = "block";
-    emptyEl.style.display = "none"; listEl.style.display = "block";
-  } else {
-    statusEl.textContent = "🔴 Sites Blocked"; statusEl.className = "tasks-block-status tasks-blocked";
-    const pending = tasks.filter(t => !t.done).length;
-    hintEl.textContent = `${pending} task${pending > 1 ? "s" : ""} remaining — complete them to unblock sites.`;
-    hintEl.style.display = "block"; emptyEl.style.display = "none"; listEl.style.display = "block";
-  }
-}
-
 async function renderTaskList() {
   const tasks = await loadTasks();
   const listEl = document.getElementById("taskList");
@@ -676,7 +726,7 @@ async function renderTaskList() {
       tasks[idx].done = !tasks[idx].done;
       if (tasks[idx].done) await recordDailyTaskCompletion(tasks[idx]);
       await saveTasks(tasks);
-      await renderTaskList(); await syncTaskBlocking();
+      await renderTaskList();
       await renderDailyGoals();
     });
   });
@@ -684,17 +734,22 @@ async function renderTaskList() {
     btn.addEventListener("click", async () => {
       const idx = parseInt(btn.dataset.idx), tasks = await loadTasks();
       tasks.splice(idx, 1); await saveTasks(tasks);
-      await renderTaskList(); await syncTaskBlocking();
+      await renderTaskList();
     });
   });
-  await syncTaskBlocking();
+  const pending = tasks.filter(task => !task.done).length;
+  const status = document.getElementById("tasksBlockStatus");
+  status.hidden = tasks.length === 0;
+  status.textContent = pending ? `${pending} remaining` : tasks.length ? "All done" : "";
+  status.className = "tasks-block-status " + (pending ? "tasks-blocked" : "tasks-free");
+  document.getElementById("taskEmpty").hidden = tasks.length > 0;
 }
 
 document.getElementById("addTaskBtn").addEventListener("click", async () => {
   const inp = document.getElementById("taskInput"), text = inp.value.trim();
   if (!text) return;
   const tasks = await loadTasks(); tasks.push({ text, done: false, id: Date.now() });
-  await saveTasks(tasks); inp.value = ""; await renderTaskList(); await syncTaskBlocking();
+  await saveTasks(tasks); inp.value = ""; await renderTaskList();
 });
 document.getElementById("taskInput").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("addTaskBtn").click(); });
 renderTaskList();
@@ -1606,7 +1661,7 @@ document.getElementById("restoreInput").addEventListener("change", async (e) => 
 // Reset stats
 document.getElementById("resetStatsBtn").addEventListener("click", async () => {
   if (!confirm("Reset all tracking statistics? This cannot be undone.")) return;
-  await chrome.storage.local.remove(["timeData","dailyPomoCount","pomoHistory","achievements","smartFocusHistory","dailyTaskCompletions"]);
+  await chrome.storage.local.remove(["timeData","activeTracking","dailyPomoCount","pomoHistory","achievements","smartFocusHistory","dailyTaskCompletions"]);
   alert("Statistics reset.");
 });
 
@@ -1625,44 +1680,17 @@ loadTheme();
 // DARK MODE TAB
 // =============================================
 
-const DARK_STYLES = {
-  smart: (i) => `html { color-scheme: dark !important; background: #101216 !important; filter: invert(${i}%) hue-rotate(180deg) !important; } img, video, canvas, iframe, svg, picture, [style*="background-image"] { filter: invert(100%) hue-rotate(180deg) !important; }`,
-  invert: (i) => `html { filter: invert(${i}%) hue-rotate(180deg) !important; } img, video, canvas, iframe, svg, picture, [style*="background-image"] { filter: invert(100%) hue-rotate(180deg) !important; }`,
-  dim: (i) => `html { background: #101216 !important; filter: brightness(${Math.max(35, 100 - Math.round(i * 0.45))}%) !important; color-scheme: dark !important; }`,
-  grayscale: (i) => `html { filter: grayscale(100%) invert(${i}%) hue-rotate(180deg) !important; } img, video, canvas, iframe, svg, picture { filter: invert(100%) hue-rotate(180deg) !important; }`
-};
-
 let darkState = { global: false, style: "smart", intensity: 90, sites: {} };
 let darkCurrentDomain = null;
 let darkCurrentTabId = null;
 
 async function loadDarkState() {
   const r = await chrome.storage.local.get("darkMode");
-  if (r.darkMode) darkState = { ...darkState, ...r.darkMode, sites: { ...(r.darkMode.sites || {}) } };
+  darkState = { global: false, style: "smart", intensity: 90, ...r.darkMode, sites: { ...r.darkMode?.sites } };
 }
 
 async function saveDarkState() {
   await chrome.storage.local.set({ darkMode: darkState });
-}
-
-function getDarkCSS(style, intensity) {
-  return (DARK_STYLES[style] || DARK_STYLES.smart)(intensity);
-}
-
-async function applyDarkToTab(tabId, enabled, style, intensity, previousStyle = style, previousIntensity = intensity) {
-  const target = { tabId };
-  try {
-    await chrome.scripting.removeCSS({
-      target, css: getDarkCSS(previousStyle, previousIntensity)
-    }).catch(() => {});
-    await chrome.scripting.removeCSS({
-      target,
-      css: `html { filter: invert(90%) hue-rotate(180deg) !important; } img, video, canvas, iframe, svg { filter: invert(100%) hue-rotate(180deg) !important; }`
-    }).catch(() => {});
-    if (enabled) await chrome.scripting.insertCSS({ target, css: getDarkCSS(style, intensity) });
-  } catch(e) {
-    console.warn("Dark mode injection failed:", e.message);
-  }
 }
 
 function isSupportedPage(tab) {
@@ -1674,8 +1702,7 @@ function getDarkEnabledForDomain(domain) {
 }
 
 async function getCurrentDarkTab() {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  return tab;
+  return currentWebsiteTab();
 }
 
 function updateQuickDarkButton(enabled) {
@@ -1690,7 +1717,16 @@ function updateQuickDarkButton(enabled) {
 async function syncDarkToCurrentTab() {
   try {
     const tab = await getCurrentDarkTab();
+    document.getElementById("darkGlobalToggle").checked = darkState.global;
+    document.getElementById("darkIntensity").value = darkState.intensity;
+    document.getElementById("darkIntensityVal").textContent = darkState.intensity + "%";
+    document.querySelectorAll(".dark-style-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.style === darkState.style);
+    });
+    renderDarkSiteList();
     if (!isSupportedPage(tab)) {
+      document.getElementById("darkCurrentSite").textContent = "No supported website";
+      document.getElementById("darkSiteToggle").disabled = true;
       darkCurrentDomain = null;
       darkCurrentTabId = null;
       updateQuickDarkButton(false);
@@ -1701,29 +1737,11 @@ async function syncDarkToCurrentTab() {
     darkCurrentTabId = tab.id;
     document.getElementById("darkCurrentSite").textContent = domain;
     const enabled = getDarkEnabledForDomain(domain);
-    document.getElementById("darkSiteToggle").checked = enabled;
-    document.getElementById("darkGlobalToggle").checked = darkState.global;
-    document.getElementById("darkIntensity").value = darkState.intensity;
-    document.getElementById("darkIntensityVal").textContent = darkState.intensity + "%";
-    document.querySelectorAll(".dark-style-btn").forEach(btn => {
-      btn.classList.toggle("active", btn.dataset.style === darkState.style);
-    });
+    const toggle = document.getElementById("darkSiteToggle");
+    toggle.disabled = false;
+    toggle.checked = enabled;
     updateQuickDarkButton(enabled);
-    await applyDarkToTab(tab.id, enabled, darkState.style, darkState.intensity);
-    renderDarkSiteList();
   } catch(e) { console.warn("Dark sync error:", e); }
-}
-
-async function applyDarkToAllTabs(previousStyle = darkState.style, previousIntensity = darkState.intensity) {
-  const tabs = await chrome.tabs.query({});
-  for (const tab of tabs) {
-    if (!isSupportedPage(tab)) continue;
-    try {
-      const domain = new URL(tab.url).hostname.replace(/^www\./, "");
-      await applyDarkToTab(tab.id, getDarkEnabledForDomain(domain), darkState.style, darkState.intensity, previousStyle, previousIntensity);
-    } catch {}
-  }
-  await syncDarkToCurrentTab();
 }
 
 function renderDarkSiteList() {
@@ -1735,16 +1753,16 @@ function renderDarkSiteList() {
   }
   list.innerHTML = entries.map(([domain, enabled]) => `
     <div class="dark-site-row">
-      <span class="dark-site-row-name">${domain}</span>
+      <span class="dark-site-row-name">${escapeHtml(domain)}</span>
       <span class="dark-site-row-mode">${enabled ? "Dark" : "Light"}</span>
-      <button class="dark-rm-btn" data-domain="${domain}" aria-label="Remove override for ${domain}">Remove</button>
+      <button class="dark-rm-btn" data-domain="${escapeHtml(domain)}" aria-label="Remove override for ${escapeHtml(domain)}">Remove</button>
     </div>`).join("");
   list.querySelectorAll(".dark-rm-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
       delete darkState.sites[btn.dataset.domain];
       await saveDarkState();
       renderDarkSiteList();
-      await applyDarkToAllTabs();
+      await syncDarkToCurrentTab();
     });
   });
 }
@@ -1757,7 +1775,6 @@ document.getElementById("quickDarkToggle")?.addEventListener("click", async () =
   const next = !getDarkEnabledForDomain(darkCurrentDomain);
   darkState.sites[darkCurrentDomain] = next;
   await saveDarkState();
-  await applyDarkToTab(darkCurrentTabId, next, darkState.style, darkState.intensity);
   document.getElementById("darkSiteToggle").checked = next;
   updateQuickDarkButton(next);
   renderDarkSiteList();
@@ -1766,36 +1783,31 @@ document.getElementById("quickDarkToggle")?.addEventListener("click", async () =
 document.getElementById("darkGlobalToggle").addEventListener("change", async (e) => {
   darkState.global = e.target.checked;
   await saveDarkState();
-  await applyDarkToAllTabs();
+  await syncDarkToCurrentTab();
 });
 
 document.getElementById("darkSiteToggle").addEventListener("change", async (e) => {
   if (!darkCurrentDomain || !darkCurrentTabId) return;
   darkState.sites[darkCurrentDomain] = e.target.checked;
   await saveDarkState();
-  await applyDarkToTab(darkCurrentTabId, e.target.checked, darkState.style, darkState.intensity);
   updateQuickDarkButton(e.target.checked);
   renderDarkSiteList();
 });
 
 document.querySelectorAll(".dark-style-btn").forEach(btn => {
   btn.addEventListener("click", async () => {
-    const previousStyle = darkState.style;
-    const previousIntensity = darkState.intensity;
     darkState.style = btn.dataset.style;
     document.querySelectorAll(".dark-style-btn").forEach(b => b.classList.toggle("active", b.dataset.style === darkState.style));
     await saveDarkState();
-    await applyDarkToAllTabs(previousStyle, previousIntensity);
+    await syncDarkToCurrentTab();
   });
 });
 
 document.getElementById("darkIntensity").addEventListener("input", async (e) => {
-  const previousStyle = darkState.style;
-  const previousIntensity = darkState.intensity;
   darkState.intensity = parseInt(e.target.value, 10);
   document.getElementById("darkIntensityVal").textContent = darkState.intensity + "%";
   await saveDarkState();
-  await applyDarkToAllTabs(previousStyle, previousIntensity);
+
 });
 
 loadDarkState().then(() => syncDarkToCurrentTab());

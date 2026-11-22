@@ -99,8 +99,7 @@
       if (!domain) return;
       const matches = site => domain === site || domain.endsWith("." + site);
       if ((state.allowedSites || []).some(matches)) return;
-      const saved = await chrome.storage.local.get("blockedSites");
-      const base = Array.isArray(saved.blockedSites) ? saved.blockedSites : [];
+      const base = await getBlockedSites();
       const blocked = (state.blockedSites || []).some(matches) || base.some(site => matches(normalizeDomain(site)));
       if (blocked) await chrome.tabs.update(tab.id, { url: chrome.runtime.getURL("blocked.html") });
     } catch (_) {}

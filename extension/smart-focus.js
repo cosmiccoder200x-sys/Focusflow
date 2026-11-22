@@ -38,7 +38,7 @@
 
     $("sfSessionClock").textContent = formatTime(remaining);
     $("homeFocusShortcut").textContent = running ? "Focus · " + formatTime(remaining)
-      : paused ? "Focus paused · " + formatTime(remaining) : "Set up focus";
+      : paused ? "Paused · " + formatTime(remaining) : "Focus";
     $("sfSessionProgress").style.width = progress + "%";
     $("sfSessionStatus").textContent = running ? "FOCUS SESSION ACTIVE" : paused ? "SESSION PAUSED" :
       state.status === "completed" ? "SESSION COMPLETE" : state.status === "ended" ? "SESSION ENDED" : "READY TO FOCUS";
