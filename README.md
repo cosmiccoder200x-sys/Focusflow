@@ -1,16 +1,36 @@
-# FocusFlow
+# FocusFlow — Take Back Your Attention
 
-> A Chrome productivity workspace for understanding your browsing habits, reducing distractions, and building consistent deep-work routines.
+**One Chrome workspace for fewer distractions and more intentional work.**
 
-![Chrome Extension](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4?logo=googlechrome&logoColor=white)
-![Version](https://img.shields.io/badge/version-4.1.0-8BC34A)
-![Platform](https://img.shields.io/badge/platform-Chrome%20desktop-4285F4)
+FocusFlow is an open-source Chrome productivity extension combining website blocking, browsing-time tracking, Pomodoro sessions, tasks, notes, video-speed controls, website dark mode, and activity insights.
 
-FocusFlow brings screen-time tracking, website blocking, a Pomodoro timer, tasks, notes, video-speed controls, dark mode, and productivity insights into one browser extension.
+![Manifest V3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4?logo=googlechrome&logoColor=white)
+![Extension source version](https://img.shields.io/badge/extension%20source-v4.1.0-8BC34A)
+![Chrome desktop](https://img.shields.io/badge/platform-Chrome%20desktop-4285F4)
+![License: MIT](https://img.shields.io/badge/license-MIT-8BC34A)
+
+<!-- Genuine existing GitHub attachment from the project; not a generated product mockup. -->
+<img width="520" height="742" alt="Screenshot previously captured from the FocusFlow Chrome extension interface" src="https://github.com/user-attachments/assets/07ac7328-c6e8-4f08-bc9a-07965ebd0bae" />
+
+### Try FocusFlow
+
+**[Install from source →](docs/INSTALLATION.md)** · **[What it does ↓](#what-you-can-do-with-focusflow)** · **[Privacy & permissions](docs/PRIVACY.md)**
+
+> **Current availability:** Install by loading the `extension/` folder in Chrome Developer mode. There is no verified Chrome Web Store listing or published GitHub Release. The extension version is from `extension/manifest.json`, not a published-release claim.
+
+**Why choose FocusFlow?** Block selected distractions, keep a focus timer and tasks in the same workspace, and use browser activity insights to understand your habits. Advanced features require real-Chrome verification before they are promoted as release-tested.
+
+Real demo footage and additional screenshots are **pending capture**; see [the media capture plan](docs/MEDIA_GUIDE.md). No mock screenshots are presented as real functionality.
 
 ---
 
 ## Contents
+
+- [Install in Chrome](docs/INSTALLATION.md)
+- [Privacy overview](docs/PRIVACY.md)
+- [Release readiness](docs/RELEASE_CHECKLIST.md)
+- [Launch and distribution plan](docs/GROWTH.md)
+- [Static landing page source](docs/index.html) (not deployed by this PR)
 
 - [What you can do with FocusFlow](#what-you-can-do-with-focusflow)
 - [Install FocusFlow](#install-focusflow)
@@ -32,12 +52,12 @@ FocusFlow brings screen-time tracking, website blocking, a Pomodoro timer, tasks
 | **Insights** | Review activity, streaks, achievements, productivity score, coding activity, and reports |
 | **Settings** | Manage preferences, export or restore data, and reset data |
 
-<img width="520" height="742" alt="image" src="https://github.com/user-attachments/assets/07ac7328-c6e8-4f08-bc9a-07965ebd0bae" />
+
 
 
 ## Install FocusFlow
 
-FocusFlow is currently loaded in Chrome as an unpacked extension.
+**[Step-by-step illustrated-ready installation guide](docs/INSTALLATION.md).** FocusFlow is currently loaded in Chrome as an unpacked extension; there is no verified Web Store listing or published release.
 
 1. Download the repository: click **Code → Download ZIP** on GitHub, then extract it. Alternatively, clone it:
    ```bash
@@ -102,7 +122,7 @@ You can use the extension gradually. You do not need to configure every tool bef
 
 The extension keeps Pomodoro session state and history in Chrome storage. A completed session can trigger a browser notification if Chrome notifications are allowed.
 
-#### Smart Focus (feature-branch preview)
+#### Smart Focus (source-code preview (browser validation pending))
 
 1. Open **Focus → Smart Focus**.
 2. Choose **25 min**, **50 min**, **90 min**, or **Custom**.
@@ -165,7 +185,7 @@ The speed control works with supported HTML5 video/audio players. Some websites 
 
 You can also use the Home quick toggle for the current website. Some websites may render imperfectly with automatic dark-mode CSS; switch the site off or try another style if that happens.
 
-#### Website Profiles (branch preview)
+#### Website Profiles (source-code preview (browser validation pending))
 
 1. Open **Tools → Profiles**.
 2. Enter a domain such as `youtube.com`, or select **Use current** while visiting the website.
@@ -255,6 +275,8 @@ Core extension data is stored using Chrome extension storage. Optional sync requ
 
 ## For developers
 
+**Validation:** `npm run check:extension` checks source references and JS syntax; `npm test` runs existing backend tests. Neither substitutes for [manual Chrome checks](docs/RELEASE_CHECKLIST.md). `python3 scripts/package_extension.py` creates a **local, unpublished** ZIP after static path validation. Root `package.json` version 1.1.0 belongs to the optional backend and does not override extension manifest version 4.1.0.
+
 ### Project structure
 
 - `extension/`: Chrome Manifest V3 extension (popup, background service worker, options, and page assets).
@@ -272,21 +294,21 @@ For backend development and deployment, follow [SETUP.md](SETUP.md). Do not comm
 
 ## Roadmap
 
-### FocusFlow 2.0 — in development
+### Current source: v4.1.0 — browser verification in progress
 
-The next productivity upgrade is being developed separately and is intended to connect:
+The following features have source files in the default branch, but that alone does **not** establish release-ready browser behavior:
 
-- **Smart Focus Mode:** an initial implementation is available on this feature branch, including 25-, 50-, 90-minute and custom sessions, temporary site blocking/allow lists, pause/resume, a five-minute emergency override, and actual-time session history.
+- **Smart Focus Mode:** an initial implementation is available in the current source tree, including 25-, 50-, 90-minute and custom sessions, temporary site blocking/allow lists, pause/resume, a five-minute emergency override, and actual-time session history.
 - **Daily Goals:** configurable focus-time and task targets, progress rings, a seven-day view, and current/best streak tracking.
-- **Website Profiles:** an initial implementation is available on this feature branch: per-site playback speed, daily time limits, dark-mode overrides, and enable/disable controls. It still needs browser-level regression testing before release.
+- **Website Profiles:** an initial implementation is available in the current source tree: per-site playback speed, daily time limits, dark-mode overrides, and enable/disable controls. It still needs browser-level regression testing before release.
 
-Daily Goals are available as a feature-branch preview. Smart Focus Mode and Website Profiles are feature-branch previews only; do not treat them as released until the pull request is reviewed, browser-tested, and merged.
+Daily Goals are available as a source-code preview (browser validation pending). Smart Focus Mode and Website Profiles are source-code preview (browser validation pending)s only; do not treat them as released until the pull request is reviewed, browser-tested, and merged.
 
 ---
 
 ## Contributing
 
-Issues, bug reports, and focused pull requests are welcome. Please include:
+Read [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md) before reporting or changing code. Issues, bug reports, and focused pull requests are welcome. Please include:
 
 - Chrome version and operating system
 - Steps to reproduce the issue
@@ -295,4 +317,4 @@ Issues, bug reports, and focused pull requests are welcome. Please include:
 
 ## License
 
-MIT — see [LICENSE](LICENSE) if present in this repository.
+MIT — see [LICENSE](LICENSE). Please verify third-party assets and dependency licenses before redistribution.
