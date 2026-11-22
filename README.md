@@ -3,7 +3,8 @@
 **One Chrome workspace for fewer distractions and more intentional work.**
 
 FocusFlow is an open-source Chrome productivity extension combining website blocking, browsing-time tracking, Pomodoro sessions, tasks, notes, video-speed controls, website dark mode, and activity insights.
-![Uploading image.png…]()
+<img width="466" height="742" alt="image" src="https://github.com/user-attachments/assets/c19bc30e-cefa-43db-ae64-243b23a18bdc" />
+
 
 
 **[Download FocusFlow v4.1.1 source ZIP](https://github.com/cosmiccoder200x-sys/Focusflow/archive/7fec9e8624e020fd9f9c021984cd027ac998447d.zip)** · [Install in Chrome](#install-focusflow) · [Learn the controls](#your-first-five-minutes) · [Privacy](docs/PRIVACY.md)
