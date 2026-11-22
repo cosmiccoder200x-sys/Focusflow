@@ -8,7 +8,7 @@
     "check:extension": "node scripts/check_extension.js",
     "check": "npm run check:extension && npm test && npm run test:tracking && npm run test:design",
     "test:tracking": "node --test tests/tracking-core.test.js tests/tracking-background.test.js",
-    "test:design": "node --test tests/premium-design.test.js"
+    "test:design": "node --test tests/premium-design.test.js tests/compact-layout.test.js"
   },
   "dependencies": {
     "@notionhq/client": "^2.2.15"
