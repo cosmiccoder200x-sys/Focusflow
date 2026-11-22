@@ -18,6 +18,7 @@ jobs:
       - run: npm run check:extension
       - run: npm test
       - run: npm run test:tracking
+      - run: npm run test:design
       - run: python3 scripts/package_extension.py
       - name: Inspect package structure
         run: python3 -c "import zipfile,glob; z=zipfile.ZipFile(glob.glob('dist/*.zip')[0]); assert 'extension/manifest.json' in z.namelist(); assert z.testzip() is None"
