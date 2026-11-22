@@ -6,8 +6,9 @@
   "scripts": {
     "test": "node api/__tests__/screen-time.test.js",
     "check:extension": "node scripts/check_extension.js",
-    "check": "npm run check:extension && npm test && npm run test:tracking",
-    "test:tracking": "node --test tests/tracking-core.test.js tests/tracking-background.test.js"
+    "check": "npm run check:extension && npm test && npm run test:tracking && npm run test:design",
+    "test:tracking": "node --test tests/tracking-core.test.js tests/tracking-background.test.js",
+    "test:design": "node --test tests/premium-design.test.js"
   },
   "dependencies": {
     "@notionhq/client": "^2.2.15"
