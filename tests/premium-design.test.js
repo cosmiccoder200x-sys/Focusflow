@@ -80,7 +80,7 @@ test("shortcut script delegates navigation to existing handlers", () => {
   ]);
 });
 test("site list uses real persisted timeData, with real relative usage bars", () => {
-  assert.match(popupJs, /const timeData = r\.timeData \|\| \{\}/);
+  assert.match(popupJs, /type: "GET_TRACKING_SNAPSHOT"/);
   assert.match(popupJs, /maxSiteSeconds/);
   assert.match(popupJs, /class="site-meter"/);
   assert.match(popupJs, /fmtSec\(secs\)/);

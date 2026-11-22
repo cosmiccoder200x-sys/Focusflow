@@ -7,11 +7,6 @@ const DEFAULT_BLOCKED = [
   "netflix.com","hotstar.com","primevideo.com"
 ];
 
-const CODING_SITES = [
-  "leetcode.com","codeforces.com","codechef.com",
-  "hackerrank.com","github.com","geeksforgeeks.org"
-];
-
 const SITE_CATEGORIES_AUTO = {
   "leetcode.com": "coding", "codeforces.com": "coding", "codechef.com": "coding",
   "hackerrank.com": "coding", "github.com": "coding", "geeksforgeeks.org": "coding",
@@ -31,22 +26,15 @@ const SITE_CATEGORIES_AUTO = {
   "iitm.ac.in": "study", "study.iitm.ac.in": "study"
 };
 
-let BLOCKED_SITES = [...DEFAULT_BLOCKED];
-
-chrome.storage.local.get("blockedSites").then(r => {
-  if (r.blockedSites && r.blockedSites.length) BLOCKED_SITES = r.blockedSites;
-  else chrome.storage.local.set({ blockedSites: BLOCKED_SITES });
-});
+async function getBlockedSites() {
+  const { blockedSites } = await chrome.storage.local.get("blockedSites");
+  return Array.isArray(blockedSites) ? blockedSites : [...DEFAULT_BLOCKED];
+}
 
 // ---- Helpers ----
 function getDomain(url) {
   try { return new URL(url).hostname.replace(/^www\./, ""); }
   catch { return null; }
-}
-
-function getTodayKey() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
 async function isBlocked(domain) {
@@ -59,12 +47,7 @@ async function isBlocked(domain) {
     if ((focus.allowedSites || []).some(matches)) return false;
     if ((focus.blockedSites || []).some(matches)) return true;
   }
-  return BLOCKED_SITES.some(b => domain === b || domain.endsWith("." + b));
-}
-
-function isCodingSite(domain) {
-  if (!domain) return false;
-  return CODING_SITES.some(c => domain === c || domain.endsWith("." + c));
+  return (await getBlockedSites()).some(b => domain === b || domain.endsWith("." + b));
 }
 
 // ---- ACCURATE PER-SITE TRACKING (Manifest V3) ----
@@ -137,21 +120,23 @@ async function onTick() {
 
 chrome.alarms.onAlarm.addListener(alarm => {
   if (alarm.name === TICK_ALARM) { onTick().catch(console.warn); return; }
-  if (alarm.name === POMO_ALARM) handlePomoAlarm();
+  if (alarm.name === POMO_ALARM) queuePomo(finishExpiredPomo).catch(console.warn);
 });
 
 async function init() {
   // Chrome 120+ supports minimum 30-second alarms; 1-second alarms do not run
   // at their requested cadence. Measure real elapsed time instead.
-  await chrome.alarms.create(TICK_ALARM, { periodInMinutes: 0.5 });
+  if (!await chrome.alarms.get(TICK_ALARM)) {
+    await chrome.alarms.create(TICK_ALARM, { periodInMinutes: 0.5 });
+  }
   await reconcileTracking();
 
-  // Existing Pomodoro alarm behavior is preserved.
-  const ps = await getPomoState();
-  if (ps.running && ps.endTime && ps.endTime > Date.now()) {
-    const existing = await chrome.alarms.get(POMO_ALARM);
-    if (!existing) await chrome.alarms.create(POMO_ALARM, { when: ps.endTime });
-  }
+  await queuePomo(async () => {
+    const state = await finishExpiredPomo();
+    if (state.running && !await chrome.alarms.get(POMO_ALARM)) {
+      await chrome.alarms.create(POMO_ALARM, { when: state.endTime });
+    }
+  });
 }
 
 chrome.runtime.onInstalled.addListener(() => { init().catch(console.warn); });
@@ -161,7 +146,7 @@ init().catch(console.warn);
 // Re-query the *actual* focused browser state rather than trusting event args.
 chrome.tabs.onActivated.addListener(({ tabId }) => { handleTabFocus(tabId).catch(console.warn); });
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status !== "complete") return;
+  if (!changeInfo.url && changeInfo.status !== "complete") return;
   handleTabFocus(tabId).catch(console.warn);
 });
 chrome.tabs.onRemoved.addListener(() => { reconcileTracking().catch(console.warn); });
@@ -184,142 +169,169 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
+  if (msg.type === "GET_TRACKING_SNAPSHOT") {
+    queueTracking(async () => {
+      const context = await currentTrackingContext();
+      const snapshot = await chrome.storage.local.get(["activeTracking", "timeData", "siteCategories"]);
+      const now = Date.now();
+      const timeData = {};
+      for (let daysAgo = 0; daysAgo < 7; daysAgo++) {
+        const day = new Date(now);
+        day.setDate(day.getDate() - daysAgo);
+        const key = FocusFlowTrackingCore.dayKey(day.getTime());
+        if (snapshot.timeData?.[key]) timeData[key] = snapshot.timeData[key];
+      }
+      const projected = FocusFlowTrackingCore.reconcile(
+        { ...snapshot, timeData }, context, now, SITE_CATEGORIES_AUTO
+      );
+      return {
+        timeData: projected.timeData,
+        siteCategories: projected.siteCategories,
+        ...FocusFlowTrackingCore.getLiveStatus(snapshot, context, now)
+      };
+    }).then(sendResponse, error => {
+      console.warn("FocusFlow tracking:", error);
+      sendResponse(null);
+    });
+    return true;
+  }
+
   if (msg.type === "GET_BLOCKED_SITES") {
-    sendResponse({ sites: BLOCKED_SITES });
+    getBlockedSites().then(sites => sendResponse({ sites }), () => sendResponse(null));
+    return true;
   }
 
   if (msg.type === "SET_BLOCKED_SITES") {
-    BLOCKED_SITES = msg.sites;
-    chrome.storage.local.set({ blockedSites: BLOCKED_SITES });
-    sendResponse({ ok: true });
+    if (!Array.isArray(msg.sites) || msg.sites.some(site => typeof site !== "string")) {
+      sendResponse({ ok: false });
+      return;
+    }
+    chrome.storage.local.set({ blockedSites: msg.sites }).then(async () => {
+      await reconcileTracking();
+      sendResponse({ ok: true });
+    }).catch(error => {
+      console.warn("FocusFlow blocked sites:", error);
+      sendResponse({ ok: false });
+    });
+    return true;
   }
 
   if (msg.type === "GET_AUTO_CATEGORIES") {
     sendResponse({ categories: SITE_CATEGORIES_AUTO });
   }
 
-  if (msg.type === "POMO_GET_STATE") {
-    getPomoState().then(sendResponse); return true;
+  if (msg.type?.startsWith("POMO_")) {
+    queuePomo(() => applyPomoCommand(msg)).then(sendResponse, error => {
+      console.warn("FocusFlow timer:", error);
+      sendResponse({ ok: false, reason: "Could not update the timer." });
+    });
+    return true;
   }
-
-  if (msg.type === "POMO_START") {
-    (async () => {
-      const state = await getPomoState();
-      const studySec = msg.studySec || POMO_STUDY_SEC;
-      const breakSec = msg.breakSec || POMO_BREAK_SEC;
-      const fullDur  = state.phase === "study" ? studySec : breakSec;
-      const remaining = state.remaining > 0 ? state.remaining : fullDur;
-      const endTime   = Date.now() + remaining * 1000;
-      const newState  = { running: true, phase: state.phase, remaining, endTime, studySec, breakSec };
-      await setPomoState(newState);
-      await chrome.alarms.create(POMO_ALARM, { when: endTime });
-      sendResponse(newState);
-    })(); return true;
-  }
-
-  if (msg.type === "POMO_PAUSE") {
-    (async () => {
-      const state = await getPomoState();
-      const remaining = (state.running && state.endTime)
-        ? Math.max(0, Math.round((state.endTime - Date.now()) / 1000))
-        : state.remaining;
-      await chrome.alarms.clear(POMO_ALARM);
-      const newState = { running: false, phase: state.phase, remaining, endTime: null,
-        studySec: state.studySec, breakSec: state.breakSec };
-      await setPomoState(newState);
-      sendResponse(newState);
-    })(); return true;
-  }
-
-  if (msg.type === "POMO_RESET") {
-    (async () => {
-      await chrome.alarms.clear(POMO_ALARM);
-      const state = await getPomoState();
-      const newState = defaultPomoState(state.studySec || POMO_STUDY_SEC, state.breakSec || POMO_BREAK_SEC);
-      await setPomoState(newState);
-      sendResponse(newState);
-    })(); return true;
-  }
-
-  if (msg.type === "POMO_SET_DURATIONS") {
-    (async () => {
-      const state = await getPomoState();
-      if (state.running) { sendResponse({ ok: false, reason: "Stop timer first" }); return; }
-      const newState = defaultPomoState(msg.studySec, msg.breakSec);
-      await setPomoState(newState);
-      sendResponse(newState);
-    })(); return true;
-  }
-
-  return true;
 });
 
 // ===== POMODORO =====
 const POMO_STUDY_SEC = 25 * 60;
-const POMO_BREAK_SEC = 5  * 60;
+const POMO_BREAK_SEC = 5 * 60;
+const POMO_LONG_BREAK_SEC = 15 * 60;
+let pomoQueue = Promise.resolve();
 
-function defaultPomoState(studySec = POMO_STUDY_SEC, breakSec = POMO_BREAK_SEC) {
-  return { running: false, phase: "study", remaining: studySec, endTime: null, studySec, breakSec };
+function queuePomo(work) {
+  const next = pomoQueue.then(work);
+  pomoQueue = next.catch(() => {});
+  return next;
+}
+
+function selectPomoPhase(state, phase) {
+  const durations = { study: state.studySec, break: state.breakSec, longBreak: POMO_LONG_BREAK_SEC };
+  return {
+    studySec: state.studySec, breakSec: state.breakSec,
+    phase, remaining: durations[phase], running: false, endTime: null
+  };
 }
 
 async function getPomoState() {
-  const r = await chrome.storage.local.get("pomoState");
-  return r.pomoState || defaultPomoState();
+  const { pomoState } = await chrome.storage.local.get("pomoState");
+  const durations = { studySec: POMO_STUDY_SEC, breakSec: POMO_BREAK_SEC };
+  return pomoState ? { ...durations, ...pomoState } : selectPomoPhase(durations, "study");
 }
 
-async function setPomoState(state) {
-  await chrome.storage.local.set({ pomoState: state });
+function nextPomoPhase(state, completedStudySessions) {
+  if (state.phase !== "study") return "study";
+  return completedStudySessions > 0 && completedStudySessions % 4 === 0 ? "longBreak" : "break";
 }
 
-async function savePomoHistory(phase) {
-  const r = await chrome.storage.local.get("pomoHistory");
-  const history = r.pomoHistory || {};
-  const today = getTodayKey();
-  if (!history[today]) history[today] = [];
-  history[today].unshift({
-    phase, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  });
-  if (history[today].length > 50) history[today] = history[today].slice(0, 50);
-  await chrome.storage.local.set({ pomoHistory: history });
-
-  // Increment pomo count for achievements
-  const ar = await chrome.storage.local.get("dailyPomoCount");
-  const dpc = ar.dailyPomoCount || {};
-  if (!dpc[today]) dpc[today] = 0;
-  if (phase === "study") dpc[today]++;
-  await chrome.storage.local.set({ dailyPomoCount: dpc });
-}
-
-function notifyPomoDone(donePhase) {
-  try {
-    chrome.notifications.create("pomo-" + Date.now(), {
-      type: "basic", iconUrl: "icon.png",
-      title: donePhase === "study" ? "✅ Study Session Complete!" : "⏰ Break Over!",
-      message: donePhase === "study" ? "Time for a well-earned break." : "Back to work — stay focused.",
-      priority: 2
-    });
-  } catch {}
-}
-
-async function handlePomoAlarm() {
+async function finishExpiredPomo() {
   const state = await getPomoState();
-  const donePhase = state.phase;
-  await savePomoHistory(donePhase);
-  notifyPomoDone(donePhase);
-  const nextPhase     = donePhase === "study" ? "break" : "study";
-  const studySec      = state.studySec || POMO_STUDY_SEC;
-  const breakSec      = state.breakSec || POMO_BREAK_SEC;
-  const nextRemaining = nextPhase === "study" ? studySec : breakSec;
-  await setPomoState({ running: false, phase: nextPhase, remaining: nextRemaining, endTime: null, studySec, breakSec });
+  if (!state.running || !state.endTime || state.endTime > Date.now()) return state;
+
+  const { pomoHistory = {}, dailyPomoCount = {} } = await chrome.storage.local.get(["pomoHistory", "dailyPomoCount"]);
+  const today = FocusFlowTrackingCore.dayKey(state.endTime);
+  const done = state.phase;
+  const sessionCount = dailyPomoCount[today] ?? (pomoHistory[today] || []).filter(item => item.phase === "study").length;
+  dailyPomoCount[today] = sessionCount + Number(done === "study");
+  const time = new Date(state.endTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  pomoHistory[today] = [{ phase: done, time }, ...(pomoHistory[today] || [])].slice(0, 50);
+  const next = {
+    ...selectPomoPhase(state, nextPomoPhase(state, dailyPomoCount[today])),
+    completedAt: state.endTime
+  };
+  await chrome.storage.local.set({ pomoState: next, pomoHistory, dailyPomoCount });
+  try {
+    await chrome.notifications.create("pomo-" + state.endTime, {
+      type: "basic", iconUrl: "icon.png",
+      title: done === "study" ? "Study Session Complete" : "Break Over",
+      message: done === "study" ? "Time for a well-earned break." : "Ready for another focus session."
+    });
+  } catch (error) {
+    console.warn("FocusFlow timer notification:", error);
+  }
+  return next;
 }
 
-chrome.storage.onChanged.addListener(async (changes, area) => {
-  if (area !== "local") return;
-  if (changes.tasks) {
-    // Task blocking handled via SET_BLOCKED_SITES messages
+async function applyPomoCommand(msg) {
+  const state = await finishExpiredPomo();
+  let next;
+  switch (msg.type) {
+    case "POMO_GET_STATE":
+      return state;
+    case "POMO_START": {
+      if (state.running) return state;
+      const remaining = state.remaining || selectPomoPhase(state, state.phase).remaining;
+      next = { ...state, remaining, running: true, endTime: Date.now() + remaining * 1000, completedAt: null };
+      break;
+    }
+    case "POMO_PAUSE":
+      if (!state.running) return state;
+      next = { ...state, running: false, remaining: Math.ceil((state.endTime - Date.now()) / 1000), endTime: null };
+      break;
+    case "POMO_RESET":
+      next = selectPomoPhase(state, "study");
+      break;
+    case "POMO_SKIP":
+      next = selectPomoPhase(state, state.phase === "study" ? "break" : "study");
+      break;
+    case "POMO_SELECT_PHASE":
+      if (state.running || !["study", "break", "longBreak"].includes(msg.phase)) {
+        return { ok: false, reason: "Pause the timer before changing modes." };
+      }
+      next = selectPomoPhase(state, msg.phase);
+      break;
+    case "POMO_SET_DURATIONS":
+      if (state.running) return { ok: false, reason: "Pause the timer before changing durations." };
+      if (!Number.isInteger(msg.studySec / 60) || msg.studySec < 60 || msg.studySec > 7200 ||
+          !Number.isInteger(msg.breakSec / 60) || msg.breakSec < 60 || msg.breakSec > 3600) {
+        return { ok: false, reason: "Enter 1–120 study minutes and 1–60 break minutes." };
+      }
+      next = selectPomoPhase({ studySec: msg.studySec, breakSec: msg.breakSec }, "study");
+      break;
+    default:
+      return { ok: false, reason: "Unknown timer command." };
   }
-});
-
+  await chrome.storage.local.set({ pomoState: next });
+  if (next.running) await chrome.alarms.create(POMO_ALARM, { when: next.endTime });
+  else await chrome.alarms.clear(POMO_ALARM);
+  return next;
+}
 
 /* ===== Persistent per-site dark mode ===== */
 const FOCUSFLOW_DARK_STYLES = {
@@ -354,12 +366,9 @@ async function focusFlowApplyDark(tab, previousState = null) {
       }).catch(() => {});
     }
 
-    if (enabled) {
-      await chrome.scripting.insertCSS({
-        target,
-        css: focusFlowDarkCss(state.style || "smart", Math.max(50, Math.min(100, Number(state.intensity) || 90)))
-      });
-    }
+    const css = focusFlowDarkCss(state.style || "smart", Math.max(50, Math.min(100, Number(state.intensity) || 90)));
+    await chrome.scripting.removeCSS({ target, css }).catch(() => {});
+    if (enabled) await chrome.scripting.insertCSS({ target, css });
   } catch (error) {
     // Chrome internal pages and restricted pages cannot accept injected CSS.
   }
@@ -373,8 +382,11 @@ async function focusFlowApplyDarkToOpenTabs(previousState = null) {
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === "complete") focusFlowApplyDark(tab);
 });
+let darkQueue = Promise.resolve();
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.darkMode) focusFlowApplyDarkToOpenTabs(changes.darkMode.oldValue || null);
+  if (area === "local" && changes.darkMode) {
+    darkQueue = darkQueue.then(() => focusFlowApplyDarkToOpenTabs(changes.darkMode.oldValue || null)).catch(console.warn);
+  }
 });
 chrome.runtime.onStartup.addListener(() => focusFlowApplyDarkToOpenTabs());
 chrome.runtime.onInstalled.addListener(() => focusFlowApplyDarkToOpenTabs());

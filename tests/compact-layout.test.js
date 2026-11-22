@@ -9,10 +9,11 @@ const file = (p) => fs.readFileSync(path.join(root,p),"utf8");
 const html = file("extension/popup.html");
 const css = file("extension/compact-layout.css");
 const base = file("extension/premium-design.css");
+const dashboard = file("extension/dashboard.css");
 
 test("compact stylesheet overrides desktop sidebar after premium theme", () => {
   const links = [...html.matchAll(/<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"/g)].map(m=>m[1]);
-  assert.deepEqual(links,["popup.css","premium-design.css","compact-layout.css"]);
+  assert.deepEqual(links,["popup.css","premium-design.css","compact-layout.css","dashboard.css"]);
   assert.match(base,/grid-template-columns:\s*132px/);
   assert.match(css,/body,\s*body\[data-theme\]\s*\{[^}]*display:\s*flex/s);
   assert.match(css,/flex-direction:\s*column/);
@@ -26,8 +27,8 @@ test("compact stylesheet overrides desktop sidebar after premium theme", () => {
 test("small popup keeps usable controls and avoids sidebar width tax", () => {
   assert.match(css,/@media\s*\(max-width:\s*355px\)/);
   assert.match(css,/\.workspace-nav\s+\.workspace-btn\s*\{[^}]*min-height:\s*52px/s);
-  assert.match(css,/\.home-actions\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/s);
-  assert.match(css,/\.home-actions\s+\.btn\s*\{[^}]*min-height:\s*44px/s);
+  assert.match(dashboard,/\.dashboard-metrics\s*\{[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/s);
+  assert.match(dashboard,/@media \(min-width: 570px\) \{\s*body\.dashboard-expanded/);
   assert.match(css,/\.home-legacy-data\s*\{[^}]*display:\s*flex\s*!important/s);
   assert.match(css,/\.home-charts\s+canvas\s*\{[^}]*max-width:\s*100%/s);
   assert.match(css,/\.profile-field-grid\s*\{\s*grid-template-columns:\s*1fr/s);
@@ -49,11 +50,11 @@ test("critical view IDs and all navigation groups remain intact", () => {
     "heatmapCanvas","goalFocusTarget","dailyGoalSave"
   ])assert.ok(ids.includes(id),"Missing UI hook: "+id);
 });
-test("short labels fit narrow actions while keeping accessible meaning", () => {
-  assert.match(html,/id="quickDarkToggle"[^>]*aria-label="Site dark mode"/);
-  assert.match(html,/<span>Dark mode<\/span><span class="quick-dark-switch"/);
-  assert.match(html,/id="homeFocusShortcut"[^>]*>Smart Focus<\/button>/);
-  assert.match(html,/id="homeTimerShortcut"[^>]*>Pomodoro timer<\/button>/);
-  assert.match(html,/id="homeAppearanceShortcut"[^>]*>Site dark mode<\/button>/);
-  assert.match(html,/id="homeBlockShortcut"[^>]*>Block sites <span/);
+test("dashboard actions expose readable labels and working feature hooks", () => {
+  assert.match(html,/id="quickDarkToggle"[^>]*aria-label="Website dark mode"/);
+  assert.match(html,/id="openDashboard"[^>]*aria-label="Open full dashboard"/);
+  assert.match(html,/id="dashboardTimerStart"[^>]*aria-label="Start timer"/);
+  assert.match(html,/id="dashboardTimerSkip"[^>]*aria-label="Skip timer phase"/);
+  assert.match(html,/data-pomo-phase="longBreak"/);
+  assert.match(html,/id="dashboardSpeed"[^>]*aria-label="Apply video playback speed"/);
 });

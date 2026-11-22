@@ -187,3 +187,98 @@ test("worker restart, repeated tab events and GET_LIVE_STATUS do not double-coun
   await env.drain();
   assert.equal(read(env, "github.com"), 60);
 });
+
+async function message(env, type, fields = {}) {
+  const responses = [];
+  env.events.message.fire({ type, ...fields }, null, data => responses.push(data));
+  await env.drain();
+  assert.equal(responses.length, 1);
+  return responses[0];
+}
+
+test("dashboard snapshot counts the same interval only once before and after a checkpoint", async () => {
+  const state = { now: time(0), activeId: 1 };
+  const env = boot(state);
+  await env.drain();
+  state.now = time(0.5);
+  const pending = await message(env, "GET_TRACKING_SNAPSHOT");
+  assert.equal(pending.timeData[key]["github.com"], 30);
+  assert.equal(read(env, "github.com"), 0);
+  env.events.alarm.fire({ name: "tickAlarm" });
+  const persisted = await message(env, "GET_TRACKING_SNAPSHOT");
+  assert.equal(persisted.timeData[key]["github.com"], 30);
+  assert.equal(persisted.elapsedSeconds, 0);
+  assert.equal(read(env, "github.com"), 30);
+});
+
+test("removing the final blocked site survives worker restart and allows browsing", async () => {
+  const state = { now: time(0), activeId: 1, one: "https://instagram.com" };
+  const storage = {};
+  let env = boot(state, storage);
+  await env.drain();
+  assert.ok((await message(env, "GET_BLOCKED_SITES")).sites.includes("instagram.com"));
+  assert.equal((await message(env, "SET_BLOCKED_SITES", { sites: [] })).ok, true);
+  env = boot(state, storage);
+  await env.drain();
+  assert.equal((await message(env, "GET_BLOCKED_SITES")).sites.length, 0);
+  env.events.updated.fire(1, { url: state.one });
+  await env.drain();
+  assert.equal(state.one, "https://instagram.com");
+  state.now = time(0.5);
+  assert.equal((await message(env, "GET_TRACKING_SNAPSHOT")).timeData[key]["instagram.com"], 30);
+});
+
+test("navigation URL changes switch tracking before the destination finishes loading", async () => {
+  const state = { now: time(0), activeId: 1 };
+  const env = boot(state);
+  await env.drain();
+  state.now = time(0.25);
+  state.one = "https://example.com";
+  env.events.updated.fire(1, { url: state.one });
+  await env.drain();
+  state.now = time(0.5);
+  const { timeData } = await message(env, "GET_TRACKING_SNAPSHOT");
+  assert.equal(timeData[key]["github.com"], 15);
+  assert.equal(timeData[key]["example.com"], 15);
+});
+
+test("timer preserves custom durations across pause, resume and worker restart", async () => {
+  const state = { now: time(0), activeId: 1 };
+  let env = boot(state);
+  await env.drain();
+  await message(env, "POMO_SET_DURATIONS", { studySec: 1800, breakSec: 420 });
+  await message(env, "POMO_START");
+  state.now = time(2);
+  const paused = await message(env, "POMO_PAUSE");
+  assert.equal(paused.remaining, 1680);
+  env.events.alarm.fire({ name: "pomoAlarm" });
+  await env.drain();
+  assert.equal(env.storage.pomoHistory, undefined);
+  env = boot(state, env.storage);
+  await env.drain();
+  const resumed = await message(env, "POMO_START");
+  assert.equal(resumed.endTime, time(30));
+  assert.equal(resumed.studySec, 1800);
+  assert.equal(resumed.breakSec, 420);
+});
+
+test("an expired fourth study session becomes a long break once, even on restart", async () => {
+  const state = { now: time(0), activeId: 1 };
+  const storage = { dailyPomoCount: { [key]: 3 } };
+  let env = boot(state, storage);
+  await env.drain();
+  await message(env, "POMO_START");
+  state.now = time(26);
+  env = boot(state, storage);
+  env.events.alarm.fire({ name: "pomoAlarm" });
+  env.events.alarm.fire({ name: "pomoAlarm" });
+  await env.drain();
+  assert.equal(storage.dailyPomoCount[key], 4);
+  assert.equal(storage.pomoHistory[key].length, 1);
+  const timer = await message(env, "POMO_GET_STATE");
+  assert.equal(timer.phase, "longBreak");
+  assert.equal(timer.remaining, 900);
+  const skipped = await message(env, "POMO_SKIP");
+  assert.equal(skipped.phase, "study");
+  assert.equal(storage.pomoHistory[key].length, 1);
+});
