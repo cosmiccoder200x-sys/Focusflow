@@ -91,7 +91,7 @@ test("landing page is responsive and describes real availability, not fake metri
   assert.match(landing,/max-width:\s*1190px/);
   assert.match(landing,/@media\(max-width:650px\)/);
   assert.match(landing,/Real repository image/);
-  assert.match(landing,/pre.*Design 01/i);
+  assert.match(landing,/before Design 01/i);
   assert.match(landing,/source installation only/i);
   assert.ok(!/(\b[1-9]\d*h\s*\d+m\b|\b\d+%\s*productivity\b)/i.test(landing),
     "Do not invent product analytics in promotional art");
