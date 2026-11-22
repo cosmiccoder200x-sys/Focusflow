@@ -1,6 +1,6 @@
 # Privacy and permissions
 
-FocusFlow's Chrome Manifest V3 extension declares `activeTab`, `scripting`, `storage`, `tabs`, `alarms`, `notifications`, and `<all_urls>` host permissions. The broad host permission supports website-level controls, but it deserves careful scrutiny.
+FocusFlow's Chrome Manifest V3 extension declares `activeTab`, `scripting`, `storage`, `tabs`, `alarms`, `notifications`, `idle`, and `<all_urls>` host permissions. The broad host permission supports website-level controls, but it deserves careful scrutiny.
 
 Core tracking data, settings, tasks and notes use extension storage according to the current project documentation. The optional RangOS integration is configured separately and can send data through a user-specified backend to Notion. Do not turn it on without reading [SETUP.md](../SETUP.md).
 
