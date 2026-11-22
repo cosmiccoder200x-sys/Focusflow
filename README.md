@@ -4,52 +4,18 @@
 
 FocusFlow is an open-source Chrome productivity extension combining website blocking, browsing-time tracking, Pomodoro sessions, tasks, notes, video-speed controls, website dark mode, and activity insights.
 
-![Manifest V3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4?logo=googlechrome&logoColor=white)
-![Extension source version](https://img.shields.io/badge/extension%20source-v4.1.0-8BC34A)
-![Chrome desktop](https://img.shields.io/badge/platform-Chrome%20desktop-4285F4)
-![License: MIT](https://img.shields.io/badge/license-MIT-8BC34A)
+**[Download FocusFlow v4.1.1 source ZIP](https://github.com/cosmiccoder200x-sys/Focusflow/archive/refs/heads/feat/focusflow-emerald-dashboard.zip)** · [Install in Chrome](#install-focusflow) · [Learn the controls](#your-first-five-minutes) · [Privacy](docs/PRIVACY.md)
 
-<!-- Genuine existing GitHub attachment from the project; not a generated product mockup. -->
-<img width="520" height="742" alt="Screenshot previously captured from the FocusFlow Chrome extension interface" src="https://github.com/user-attachments/assets/07ac7328-c6e8-4f08-bc9a-07965ebd0bae" />
-
-### Try FocusFlow
-
-**[Install from source →](docs/INSTALLATION.md)** · **[What it does ↓](#what-you-can-do-with-focusflow)** · **[Privacy & permissions](docs/PRIVACY.md)**
-
-> **Current availability:** Install by loading the `extension/` folder in Chrome Developer mode. There is no verified Chrome Web Store listing or published GitHub Release. The extension version is from `extension/manifest.json`, not a published-release claim.
-
-**Why choose FocusFlow?** Block selected distractions, keep a focus timer and tasks in the same workspace, and use browser activity insights to understand your habits. Advanced features require real-Chrome verification before they are promoted as release-tested.
-
-Real demo footage and additional screenshots are **pending capture**; see [the media capture plan](docs/MEDIA_GUIDE.md). No mock screenshots are presented as real functionality.
-
----
-
-## Contents
-
-- [Install in Chrome](docs/INSTALLATION.md)
-- [Privacy overview](docs/PRIVACY.md)
-- [Release readiness](docs/RELEASE_CHECKLIST.md)
-- [Launch and distribution plan](docs/GROWTH.md)
-- [Static landing page source](docs/index.html) (not deployed by this PR)
-
-- [What you can do with FocusFlow](#what-you-can-do-with-focusflow)
-- [Install FocusFlow](#install-focusflow)
-- [Your first five minutes](#your-first-five-minutes)
-- [How to use each workspace](#how-to-use-each-workspace)
-- [Back up and restore your data](#back-up-and-restore-your-data)
-- [Privacy and permissions](#privacy-and-permissions)
-- [Troubleshooting](#troubleshooting)
-- [For developers](#for-developers)
-- [Roadmap](#roadmap)
+FocusFlow v4.1.1 is available as an unpacked extension for desktop Chrome. The source ZIP includes everything needed for local use. Setup takes a few minutes and requires no account, backend, or API key.
 
 ## What you can do with FocusFlow
 
 | Workspace | What it is for |
 | --- | --- |
-| **Home** | A minimal overview of your current browsing activity and quick controls |
+| **Dashboard** | A minimal overview of your current browsing activity and quick controls |
 | **Focus** | Smart Focus sessions, daily goals, Pomodoro timer, tasks, and quick notes |
 | **Tools** | Block distracting websites, adjust video speed, and enable website dark mode |
-| **Insights** | Review activity, streaks, achievements, productivity score, coding activity, and reports |
+| **Analytics** | Review activity, streaks, achievements, productivity score, coding activity, and reports |
 | **Settings** | Manage preferences, export or restore data, and reset data |
 
 
@@ -57,56 +23,30 @@ Real demo footage and additional screenshots are **pending capture**; see [the m
 
 ## Install FocusFlow
 
-**[Step-by-step illustrated-ready installation guide](docs/INSTALLATION.md).** FocusFlow is currently loaded in Chrome as an unpacked extension; there is no verified Web Store listing or published release.
+1. [Download the v4.1.1 source ZIP](https://github.com/cosmiccoder200x-sys/Focusflow/archive/refs/heads/feat/focusflow-emerald-dashboard.zip) and extract it.
+2. In desktop Chrome, enter `chrome://extensions` in the address bar.
+3. Turn on **Developer mode**, then click **Load unpacked**.
+4. Open the extracted folder and select its **`extension/`** subfolder, which contains `manifest.json`.
+5. From Chrome's Extensions menu, pin **FocusFlow** and click its toolbar icon.
 
-1. Download the repository: click **Code → Download ZIP** on GitHub, then extract it. Alternatively, clone it:
-   ```bash
-   git clone https://github.com/cosmiccoder200x-sys/Focusflow.git
-   ```
-2. Open Chrome and visit **[chrome://extensions](chrome://extensions)**.
-3. Turn on **Developer mode** (top-right).
-4. Select **Load unpacked**.
-5. Choose the **`extension`** folder inside the extracted/cloned repository. Choose the folder that contains `manifest.json`, not the repository root.
-6. Pin FocusFlow from Chrome's Extensions menu so it is easy to open.
-
-Repository layout:
-
-```text
-Focusflow/
-├── extension/       # Load this folder in Chrome
-│   ├── manifest.json
-│   ├── background.js
-│   ├── popup.html
-│   ├── popup.css
-│   ├── popup.js
-│   ├── options.html
-│   └── ...
-├── api/              # Optional backend for sync
-├── package.json
-└── README.md
-```
-
-> **Note:** FocusFlow is a browser extension, not a standalone website. The extension's core local features do not require you to deploy the optional backend.
+To update an existing unpacked installation, back up your data in **Settings**, copy the new extension files into the same loaded folder, and click **Reload** at `chrome://extensions`. [More installation help](docs/INSTALLATION.md)
 
 ## Your first five minutes
 
-1. **Open FocusFlow:** click the pinned FocusFlow icon in Chrome.
-2. **Check Home:** get familiar with the overview and quick controls.
-3. **Add a task:** open **Focus → Tasks**, enter one small task, and add it.
-4. **Start a focus session:** open **Focus → Timer**, choose your study and break durations, then press **Start**.
-5. **Review your activity:** after browsing or studying, visit **Insights → Activity** or **Insights → Reports**.
-6. **Protect your data:** open **Settings** and create a JSON backup.
-
-You can use the extension gradually. You do not need to configure every tool before starting.
+1. **Track a site.** Visit a regular website and browse in the active tab. Open FocusFlow and scroll to **Today’s Website Usage**. A new install starts at zero, and browser settings pages such as `chrome://extensions` are outside tracking.
+2. **Count study time.** Click **Other** beside a tracked site to classify it as **Study**. **Focused time** is time on Study sites. **Focus rate** is the Study share of today’s tracked browsing time.
+3. **Start a timer.** Choose **Pomodoro**, **Short Break**, or **Long Break**, then press **▶**. The same button pauses or resumes the timer. **↻** resets it, and **⏭** skips the phase. The **Focus** button opens Smart Focus for sessions with temporary blocking.
+4. **Manage distractions.** Click **Website Blocking** to add or remove domains. The default list includes sites such as Instagram and Reddit. Remove any defaults you want to use.
+5. **Open the full dashboard.** Click the expand icon in the top-right corner to open a tab. On a wide window it displays the sidebar. For **Website dark mode** or **Video playback speed**, open FocusFlow while the website you want to control is active.
 
 ## How to use each workspace
 
-### 1. Home — your daily overview
+### 1. Dashboard
 
 - See the currently tracked website and today's tracked screen time.
 - Use **Website dark mode** to toggle dark mode for the current website.
-- Use the video-speed shortcuts when a supported video is open.
-- Keep Home as your quick check-in; open the other workspaces when you need more detail.
+- Use the **Video playback speed** dropdown when a supported video is open.
+- Use the date picker under **Website Usage** to review recent days.
 
 **Tip:** Screen-time tracking follows the active browser tab. It measures time in the browser, not time spent working away from the computer.
 
@@ -118,11 +58,11 @@ You can use the extension gradually. You do not need to configure every tool bef
 2. Set your study duration (default: 25 minutes) and break duration (default: 5 minutes).
 3. Press **Set** if you changed either duration.
 4. Press **Start** to begin.
-5. Use **Reset** to restart the current timer.
+5. Use **Reset** to return to the configured study duration.
 
 The extension keeps Pomodoro session state and history in Chrome storage. A completed session can trigger a browser notification if Chrome notifications are allowed.
 
-#### Smart Focus (source-code preview (browser validation pending))
+#### Smart Focus
 
 1. Open **Focus → Smart Focus**.
 2. Choose **25 min**, **50 min**, **90 min**, or **Custom**.
@@ -142,7 +82,7 @@ Smart Focus rules are additive: they do not overwrite your regular blocked-sites
 3. Select **Save daily targets**. Progress rings update as study time is tracked and tasks are completed.
 4. Review the current streak, best streak, completed-day count, and seven-day strip.
 
-Focus time is calculated from websites classified as **Study** in Overview. Task progress counts tasks marked complete after Daily Goals is installed; earlier task completions are not backfilled. Daily goal settings and task-completion history are included in JSON backup/restore. A day counts toward a streak when both targets are met.
+Focus time is calculated from websites classified as **Study** in **Website Usage**. Task progress counts tasks marked complete after Daily Goals is installed; earlier task completions are not backfilled. Daily goal settings and task-completion history are included in JSON backup/restore. A day counts toward a streak when both targets are met.
 
 #### Tasks
 
@@ -151,7 +91,7 @@ Focus time is calculated from websites classified as **Study** in Overview. Task
 3. Select **+ Add**.
 4. Mark tasks complete as you finish them.
 
-The task panel also displays the current task/blocking status. Follow the status shown in the extension; do not assume that adding a task alone starts a timed focus session.
+Completing tasks contributes to your daily task goal. Manage your regular block list from **Website Blocking**.
 
 #### Quick notes
 
@@ -161,12 +101,12 @@ Open **Focus → Notes**, type your note, and let it save automatically. Notes a
 
 #### Website blocking
 
-1. Open **Tools → Block**.
+1. Open **Tools → Block list**.
 2. Enter a domain, for example `instagram.com`.
-3. Select **+ Add**.
+3. Select **Add site**.
 4. To stop blocking a site, remove it from the blocked-sites list.
 
-Enter a domain rather than a full page URL. Blocking is applied by the extension's background service worker when Chrome reports navigation/tab activity.
+FocusFlow applies its block list during tab activity. Reload the website to check a new rule.
 
 #### Video speed
 
@@ -183,9 +123,9 @@ The speed control works with supported HTML5 video/audio players. Some websites 
 3. Choose **Smart**, **Invert**, **Dim**, or **Grayscale**.
 4. Adjust intensity if needed.
 
-You can also use the Home quick toggle for the current website. Some websites may render imperfectly with automatic dark-mode CSS; switch the site off or try another style if that happens.
+You can also use the Dashboard quick toggle for the current website. Some websites may render imperfectly with automatic dark-mode CSS; switch the site off or try another style if that happens.
 
-#### Website Profiles (source-code preview (browser validation pending))
+#### Website Profiles
 
 1. Open **Tools → Profiles**.
 2. Enter a domain such as `youtube.com`, or select **Use current** while visiting the website.
@@ -198,9 +138,9 @@ You can also use the Home quick toggle for the current website. Some websites ma
 Profiles match the saved domain and its subdomains. Daily limits use FocusFlow's existing per-site screen-time totals; when a limit is reached, the website is redirected to FocusFlow's blocked page. Browser-internal pages cannot be controlled. Profiles are stored locally in Chrome and are included in JSON backup/export files.
 
 
-### 4. Insights — understand your habits
+### 4. Analytics
 
-Open **Insights** and choose the panel you want:
+Open **Analytics** and choose the panel you want:
 
 - **Activity:** yearly activity heatmap, current/longest streak, and productive days.
 - **Score:** daily productivity score and its contributing factors.
@@ -211,7 +151,7 @@ Open **Insights** and choose the panel you want:
 
 #### Smart Insights
 
-1. Open **Insights → Smart Insights**.
+1. Open **Analytics → Smart Insights**.
 2. Review your seven-day study time, focus share, week-over-week trend, and best study day.
 3. Check the top non-study sites and recent Smart Focus session completion rate.
 4. Use the suggestions as small experiments—not as a score or judgment.
@@ -271,8 +211,9 @@ FocusFlow measures active tab time only while a Chrome window is focused and the
 | Problem | Try this |
 | --- | --- |
 | FocusFlow does not appear after installation | Confirm Developer mode is enabled and that you loaded the `extension/` folder containing `manifest.json`. |
+| The popup appears as a thin strip | Check that Chrome shows version **4.1.1** at `chrome://extensions`, click **Reload**, then reopen FocusFlow. |
 | A feature does not respond | Open `chrome://extensions`, find FocusFlow, and inspect **Errors**. Then use the extension's reload button. |
-| A blocked website still opens | Check that its domain is in **Tools → Block**, then reload the tab. Restricted browser pages cannot be controlled by extensions. |
+| A blocked website still opens | Check that its domain is in **Tools → Block list**, then reload the tab. Restricted browser pages cannot be controlled by extensions. |
 | Dark mode looks incorrect | Turn off the current-site override or choose another dark-mode style. |
 | Video speed does not change | Confirm the page uses a supported HTML5 media player, then try **Apply to Page** again. |
 | No activity appears in Insights | Keep a website active in a normal browser tab and check again after some usage has been recorded. |
@@ -280,7 +221,7 @@ FocusFlow measures active tab time only while a Chrome window is focused and the
 
 ## For developers
 
-**Validation:** `npm run check:extension` checks source references and JS syntax; `npm test` runs existing backend tests. Neither substitutes for [manual Chrome checks](docs/RELEASE_CHECKLIST.md). `python3 scripts/package_extension.py` creates a **local, unpublished** ZIP after static path validation. Root `package.json` version 1.1.0 belongs to the optional backend and does not override extension manifest version 4.1.0.
+**Validation:** Run `npm ci` and `npm run check` for manifest, JavaScript, backend, tracking, and layout checks. Neither substitutes for [manual Chrome checks](docs/RELEASE_CHECKLIST.md). `python3 scripts/package_extension.py` creates a **local, unpublished** ZIP after static path validation. Root `package.json` version 1.1.0 belongs to the optional backend and does not override extension manifest version 4.1.1.
 
 ### Project structure
 
@@ -297,19 +238,9 @@ FocusFlow measures active tab time only while a Chrome window is focused and the
 
 For backend development and deployment, follow [SETUP.md](SETUP.md). Do not commit API keys, sync secrets, or personal backup files.
 
-## Roadmap
+## Build status
 
-### Current source: v4.1.0 — browser verification in progress
-
-The following features have source files in the default branch, but that alone does **not** establish release-ready browser behavior:
-
-- **Smart Focus Mode:** an initial implementation is available in the current source tree, including 25-, 50-, 90-minute and custom sessions, temporary site blocking/allow lists, pause/resume, a five-minute emergency override, and actual-time session history.
-- **Daily Goals:** configurable focus-time and task targets, progress rings, a seven-day view, and current/best streak tracking.
-- **Website Profiles:** an initial implementation is available in the current source tree: per-site playback speed, daily time limits, dark-mode overrides, and enable/disable controls. It still needs browser-level regression testing before release.
-
-Daily Goals are available as a source-code preview (browser validation pending). Smart Focus Mode and Website Profiles are source-code preview (browser validation pending)s only; do not treat them as released until the pull request is reviewed, browser-tested, and merged.
-
----
+Version 4.1.1 includes the emerald dashboard and the toolbar-popup sizing fix. Install it using the source ZIP above. See the [release checklist](docs/RELEASE_CHECKLIST.md) for browser-level validation and distribution steps.
 
 ## Contributing
 
