@@ -254,12 +254,17 @@ FocusFlow requests these Chrome permissions to provide its features:
 | `tabs` | Identify the active tab and its website for tracking and site controls |
 | `storage` | Save preferences, tasks, notes, timer state, and activity data |
 | `alarms` | Run periodic tracking and timer events |
+| `idle` | Pause website-time tracking when Chrome reports the user as idle or locked |
 | `notifications` | Notify you about timer completion |
 | `scripting` | Apply supported website styles and media controls |
 | `activeTab` | Interact with the active tab when you use extension tools |
 | `host_permissions: <all_urls>` | Enable supported controls on websites you choose to use them on |
 
 Core extension data is stored using Chrome extension storage. Optional sync requires configuring your own backend. Review the code and backend configuration before enabling any network sync.
+
+### How accurate is website time?
+
+FocusFlow measures active tab time only while a Chrome window is focused and the browser reports active user state. It checkpoints actual elapsed seconds approximately every 30 seconds; intervals longer than 90 seconds without a reliable checkpoint are skipped rather than guessed. Chrome idle detection uses a 60-second threshold, so website time is approximate, **not an exact measure of attention**. Historical `timeData` remains intact. See [Privacy](docs/PRIVACY.md).
 
 ## Troubleshooting
 
